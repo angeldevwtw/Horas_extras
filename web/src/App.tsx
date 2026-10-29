@@ -4,6 +4,7 @@ import { hoyBogota } from './lib/fechas';
 import { guardarRegistros, leerRegistros } from './lib/registrosDeLaVentana';
 import { mensajeDeError, supabase } from './lib/supabase';
 import type { Configuracion, Festivo, Registro } from './lib/tipos';
+import { DescargaConsolidada } from './paginas/DescargaConsolidada';
 import { RegistrarHoras } from './paginas/RegistrarHoras';
 import { RegistrosDeLaVentana } from './paginas/RegistrosDeLaVentana';
 
@@ -57,6 +58,7 @@ export function App() {
         <RegistrosDeLaVentana registros={registros} hoy={hoy}
           alAnular={(id) => setRegistros((lista) =>
             lista.map((r) => (r.id === id ? { ...r, estado: 'anulada' } : r)))} />
+        <DescargaConsolidada hoy={hoy} />
       </main>
     </div>
   );

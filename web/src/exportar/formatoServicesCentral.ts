@@ -1,7 +1,7 @@
 import type { Borders, Workbook, Worksheet } from 'exceljs';
 import { formatoFecha, hoyBogota } from '../lib/fechas';
 import { minutosDelDia } from '../lib/horas';
-import type { Registro } from '../lib/tipos';
+import type { FilaFormato } from '../lib/tipos';
 
 const POLITICA = [
   'WTW reconocerá trabajo de horas extras a sus Colegas únicamente cuando previa y expresamente '
@@ -84,7 +84,7 @@ function escribirEncabezado(hoja: Worksheet, fila: number, colorDelTema: ColorDe
   }
 }
 
-function escribirRegistros(hoja: Worksheet, desde: number, registros: Registro[]) {
+function escribirRegistros(hoja: Worksheet, desde: number, registros: FilaFormato[]) {
   registros.forEach((r, i) => {
     const fila = hoja.getRow(desde + i);
     fila.values = [
@@ -145,7 +145,7 @@ function escribirPie(hoja: Worksheet, desde: number) {
 }
 
 /** Arma el formato para Services Central con los registros dados, en el orden recibido. */
-export async function construirLibro(registros: Registro[], colorDelTema: ColorDelTema): Promise<Workbook> {
+export async function construirLibro(registros: FilaFormato[], colorDelTema: ColorDelTema): Promise<Workbook> {
   const { default: ExcelJS } = await import('exceljs');
   const libro = new ExcelJS.Workbook();
   const hoja = libro.addWorksheet('Horas extras', {
@@ -166,7 +166,7 @@ export async function construirLibro(registros: Registro[], colorDelTema: ColorD
   return libro;
 }
 
-export async function descargarFormato(registros: Registro[], nombreArchivo: string) {
+export async function descargarFormato(registros: FilaFormato[], nombreArchivo: string) {
   const libro = await construirLibro(registros, colorDelTemaCss);
   const contenido = await libro.xlsx.writeBuffer();
   const url = URL.createObjectURL(new Blob([contenido], {

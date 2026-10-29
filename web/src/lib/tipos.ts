@@ -19,6 +19,11 @@ export interface Registro {
   estado: 'registrada' | 'anulada';
 }
 
+/** Lo que necesita una fila del Excel; la descarga consolidada no trae id ni clave. */
+export type FilaFormato = Pick<Registro, 'identificacion' | 'nombre_completo' | 'cargo' | 'nivel'
+  | 'filial' | 'fecha_horas_extras' | 'hora_inicio' | 'hora_final' | 'minutos_totales'
+  | 'justificacion'>;
+
 export interface Configuracion {
   finJornada: string;
   topeDiarioMin: number;

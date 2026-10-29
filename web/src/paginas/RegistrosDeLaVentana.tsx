@@ -37,8 +37,8 @@ export function RegistrosDeLaVentana({ registros, hoy, alAnular }: {
         </Boton>
       )}>
       <p className="mb-3 text-sm text-texto-suave">
-        Descargue el Excel antes de cerrar la pestaña: esta lista no se puede recuperar después.
-        Lo registrado sí queda guardado y cuenta para los topes.
+        Esta lista se borra al cerrar la pestaña. Lo registrado sí queda guardado, cuenta para los
+        topes y sale en la descarga consolidada del mes.
       </p>
       {error && <div className="mb-3"><Aviso tipo="error">{error}</Aviso></div>}
 
