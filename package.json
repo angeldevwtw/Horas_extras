@@ -1,0 +1,11 @@
+{
+  "name": "horas-extras",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:sql": "node supabase/tests/correr_pruebas.mjs"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.3.7"
+  }
+}

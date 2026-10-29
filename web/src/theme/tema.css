@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+/* Único lugar con colores. "--color-*: initial" quita la paleta por defecto de Tailwind,
+   así ningún componente puede usar un color fuera de la paleta de marca.
+   Contraste verificado (WCAG AA, 4.5:1): texto blanco sobre primario, primario-hover,
+   secundario, error, estado-registrada y estado-anulada; texto oscuro sobre alerta. */
+@theme static {
+  --color-*: initial;
+
+  --color-primario: #521380;
+  --color-primario-hover: #41056d;
+  --color-secundario: #7f35b2;
+  --color-suave: #f6f0fa;      /* A56BCD al 10 % sobre blanco */
+  --color-seleccion: #f3ebf9;  /* B07BD6 al 15 % sobre blanco */
+
+  --color-error: #ca2254;
+  --color-error-suave: #fbedf1;
+  --color-alerta: #f75784;     /* barra del tope al 80 % */
+
+  --color-estado-registrada: #1d7575;
+  --color-estado-anulada: #5f6368;
+
+  --color-blanco: #ffffff;
+  --color-fondo: #f7f7f8;
+  --color-borde: #d9d9de;
+  --color-texto: #1c1c21;
+  --color-texto-suave: #5c5c66;
+
+  --font-sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-fondo text-texto font-sans antialiased;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-primario;
+  }
+}
