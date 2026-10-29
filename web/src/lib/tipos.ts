@@ -24,6 +24,11 @@ export type FilaFormato = Pick<Registro, 'identificacion' | 'nombre_completo' | 
   | 'filial' | 'fecha_horas_extras' | 'hora_inicio' | 'hora_final' | 'minutos_totales'
   | 'justificacion'>;
 
+/** Fila de la página de administración: incluye los anulados. */
+export type RegistroAdmin = FilaFormato & Pick<Registro, 'codigo' | 'tipo_dia' | 'estado'> & {
+  motivo_anulacion: string | null;
+};
+
 export interface Configuracion {
   finJornada: string;
   finJornadaViernes: string;

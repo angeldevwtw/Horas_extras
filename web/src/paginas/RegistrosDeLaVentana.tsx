@@ -30,7 +30,7 @@ export function RegistrosDeLaVentana({ registros, hoy, alAnular }: {
   return (
     <Tarjeta
       titulo="Registrado en esta ventana"
-      descripcion="Esta lista se borra al cerrar la pestaña. Lo registrado sí queda guardado, cuenta para los topes y sale en la descarga consolidada del mes."
+      descripcion="Esta lista se borra al cerrar la pestaña. Lo registrado sí queda guardado, cuenta para los topes y sale en el Excel del mes, en Administración."
       acciones={(
         <Boton disabled={!vigentes.length}
           onClick={() => descargarFormato(vigentes, `horas-extras-${hoy}.xlsx`)}>

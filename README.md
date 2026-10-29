@@ -36,9 +36,11 @@ editan ni se borran: se anulan con un motivo y las horas anuladas dejan de conta
    botón Guardar no se activa mientras haya alguno.
 2. Cada registro guardado aparece en la lista "Registrado en esta ventana".
 3. "Descargar Excel" arma el formato con esa lista.
-4. "Descarga consolidada": con la clave de descarga, cualquiera que la conozca (por ejemplo RRHH)
-   baja el Excel con todo lo registrado en un mes, por todas las personas. Tras 10 claves
-   equivocadas en 15 minutos desde la misma conexión, se bloquea por 15 minutos.
+4. "Administración" (enlace arriba a la derecha, o la dirección con `#admin`): con la clave de
+   administración se ven todos los registros del mes, también los anulados; se busca por código,
+   cédula o nombre; se descarga el Excel del mes y se anula cualquier registro con su motivo,
+   aunque la ventana donde se hizo ya esté cerrada. Tras 10 claves equivocadas en 15 minutos
+   desde la misma conexión, se bloquea por 15 minutos. La clave no se guarda en el navegador.
 
 La lista y las claves para anular viven solo en esa pestaña (se borran al cerrarla, para no dejar
 cédulas en el equipo). Un registro hecho desde otra pestaña ya no se puede anular desde la página;
@@ -101,16 +103,16 @@ npm run dev
 
 Desde la página no se puede leer nada de lo guardado. En el panel de Supabase:
 
-- **Definir o cambiar la clave de la descarga consolidada** (SQL Editor; mínimo 12 caracteres).
-  Mientras no se defina, la descarga consolidada no funciona. Solo se guarda su hash:
+- **Definir o cambiar la clave de administración** (SQL Editor; mínimo 12 caracteres).
+  Mientras no se defina, la página de administración no funciona. Solo se guarda su hash:
 
   ```sql
   select privado.cambiar_clave_descarga('la-clave-que-se-comparte-con-rrhh');
   ```
 - **Table Editor → registros**: consultar lo registrado.
 - **Table Editor → festivos / configuracion**: agregar festivos o cambiar topes y fin de jornada.
-- **Anular un registro** (SQL Editor). Los registros no se borran ni se editan, ni siquiera desde
-  el panel; se anulan con:
+- **Anular un registro**: lo normal es hacerlo desde la página de administración. Los registros
+  no se borran ni se editan, ni siquiera desde el panel; también se pueden anular en el SQL Editor:
 
   ```sql
   select privado.anular_registro_admin('HE-00001', 'Motivo de la anulación');
@@ -120,7 +122,7 @@ Desde la página no se puede leer nada de lo guardado. En el panel de Supabase:
 
 ```bash
 npm install          # en la raíz, una sola vez
-npm run test:sql     # reglas y permisos en la base (110 pruebas)
+npm run test:sql     # reglas y permisos en la base (117 pruebas)
 
 cd web
 npm test             # minutos, tipo de día, formato H:MM y el Excel (36 pruebas)
@@ -140,6 +142,6 @@ Las cédulas son datos personales (Ley 1581 de 2012). Como la página no tiene l
 
 - Desde la API no se pueden leer registros ni colegas; solo registrar, revisar reglas, ver el total
   de horas de la semana de una cédula, anular con la clave que se entregó al registrar y, con la
-  clave de descarga, bajar el consolidado del mes.
+  clave de administración, ver y anular los registros del mes y bajar su Excel.
 - Cualquiera con la dirección puede registrar; conviene compartirla solo internamente.
 - El archivo descargado se llama `horas-extras-AAAA-MM-DD.xlsx`, sin datos del colega.

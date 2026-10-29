@@ -5,7 +5,7 @@ import { formatoDuracion, formatoHoraAmPm } from './lib/horas';
 import { guardarRegistros, leerRegistros } from './lib/registrosDeLaVentana';
 import { mensajeDeError, supabase } from './lib/supabase';
 import type { Configuracion, Festivo, Registro } from './lib/tipos';
-import { DescargaConsolidada } from './paginas/DescargaConsolidada';
+import { Administracion } from './paginas/Administracion';
 import { RegistrarHoras } from './paginas/RegistrarHoras';
 import { RegistrosDeLaVentana } from './paginas/RegistrosDeLaVentana';
 
@@ -43,6 +43,14 @@ export function App() {
 
   useEffect(() => { guardarRegistros(registros); }, [registros]);
 
+  // Sin router: #admin abre la administración y cualquier otra dirección, el registro.
+  const [enAdmin, setEnAdmin] = useState(() => location.hash === '#admin');
+  useEffect(() => {
+    const alCambiar = () => setEnAdmin(location.hash === '#admin');
+    window.addEventListener('hashchange', alCambiar);
+    return () => window.removeEventListener('hashchange', alCambiar);
+  }, []);
+
   return (
     <div className="min-h-screen">
       <header className="border-b border-borde bg-blanco">
@@ -56,26 +64,34 @@ export function App() {
               <p className="text-xs text-texto-suave">WTW Colombia</p>
             </div>
           </div>
-          <p className="rounded-full bg-suave px-3 py-1 text-xs font-medium text-primario first-letter:uppercase">
-            {nombreMes(hoy)}
-          </p>
+          <nav className="flex items-center gap-3 text-sm">
+            <span className="hidden rounded-full bg-suave px-3 py-1 text-xs font-medium text-primario first-letter:uppercase sm:inline">
+              {nombreMes(hoy)}
+            </span>
+            <a href={enAdmin ? '#' : '#admin'} className="font-medium text-primario hover:underline">
+              {enAdmin ? 'Volver al registro' : 'Administración'}
+            </a>
+          </nav>
         </div>
       </header>
 
       <main className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-8">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Registrar horas extras</h1>
-          {datosBase && <ReglasEnBreve config={datosBase.config} />}
-        </div>
-        {error && <Aviso tipo="error">{error}</Aviso>}
-        {datosBase && (
-          <RegistrarHoras hoy={hoy} {...datosBase}
-            alRegistrar={(nuevo) => setRegistros((lista) => [...lista, nuevo])} />
+        {enAdmin ? <Administracion hoy={hoy} /> : (
+          <>
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight">Registrar horas extras</h1>
+              {datosBase && <ReglasEnBreve config={datosBase.config} />}
+            </div>
+            {error && <Aviso tipo="error">{error}</Aviso>}
+            {datosBase && (
+              <RegistrarHoras hoy={hoy} {...datosBase}
+                alRegistrar={(nuevo) => setRegistros((lista) => [...lista, nuevo])} />
+            )}
+            <RegistrosDeLaVentana registros={registros} hoy={hoy}
+              alAnular={(id) => setRegistros((lista) =>
+                lista.map((r) => (r.id === id ? { ...r, estado: 'anulada' } : r)))} />
+          </>
         )}
-        <RegistrosDeLaVentana registros={registros} hoy={hoy}
-          alAnular={(id) => setRegistros((lista) =>
-            lista.map((r) => (r.id === id ? { ...r, estado: 'anulada' } : r)))} />
-        <DescargaConsolidada hoy={hoy} />
       </main>
     </div>
   );
