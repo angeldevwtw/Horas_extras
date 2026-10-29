@@ -55,14 +55,21 @@ Requiere Node 20 o superior. La CLI de Supabase se usa con `npx`, no hay que ins
 
 ### 1. Base de datos
 
+En Vercel no hay que hacer nada: en cada despliegue, `web/scripts/migrar.mjs` aplica las
+migraciones que falten con la variable `POSTGRES_URL_NON_POOLING` que deja la integración de
+Supabase (script `vercel-build`). Si una migración falla, el despliegue falla y queda publicada
+la versión anterior.
+
+También se pueden aplicar a mano con la CLI; las dos formas usan el mismo historial
+(`supabase_migrations.schema_migrations`) y no repiten nada:
+
 ```bash
 npx supabase login
 npx supabase link --project-ref jhvkmjurhktikzplspyp
 npx supabase db push
 ```
 
-`db push` aplica las migraciones; el `seed.sql` no se sube al proyecto real. La integración de
-Vercel con Supabase no crea las tablas, solo copia variables.
+El `seed.sql` no se sube al proyecto real.
 
 ### 2. Frontend en local
 
@@ -76,7 +83,8 @@ npm run dev
 ## Publicar el frontend (Vercel)
 
 - Carpeta base (Root Directory): `web`; Framework: Vite.
-- Variables: `SUPABASE_URL` y `SUPABASE_ANON_KEY` (las crea la integración de Supabase) o
+- Variables: `POSTGRES_URL_NON_POOLING` (solo para las migraciones al compilar; no llega al
+  navegador) y `SUPABASE_URL` y `SUPABASE_ANON_KEY`, todas creadas por la integración, o
   `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`. `web/vite.config.ts` pasa al navegador solo
   esas dos; la `service_role` nunca.
 - Settings → Deployment Protection: desactivar *Vercel Authentication* en producción, o la

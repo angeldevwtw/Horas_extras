@@ -6,7 +6,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "vercel-build": "node scripts/migrar.mjs && npm run build"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
@@ -20,6 +21,7 @@
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^4.7.0",
+    "pg": "^8.23.1",
     "tailwindcss": "^4.3.3",
     "typescript": "5.6",
     "vite": "^6.4.5",
