@@ -16,7 +16,7 @@ export function CalendarioMes({ hoy, festivos, seleccionada, alElegir }: {
 
   return (
     <div>
-      <p className="mb-2 text-sm font-semibold capitalize">{nombreMes(hoy)}</p>
+      <p className="mb-2 text-sm font-semibold first-letter:uppercase">{nombreMes(hoy)}</p>
       <div className="grid grid-cols-7 gap-1 text-center text-xs">
         {DIAS.map((d) => <span key={d} className="py-1 font-semibold text-texto-suave">{d}</span>)}
         {Array.from({ length: huecos }, (_, i) => <span key={`h${i}`} />)}
