@@ -130,51 +130,100 @@ export function HorasPorDia({ registros, mes, festivos }: {
 
 const nombreCorto = (fecha: string) => `${DIAS[diaDeSemana(fecha)]} ${formatoFecha(fecha).slice(0, 5)}`;
 
-function BarrasHorizontales({ titulo, filas }: {
+interface Fila { clave: string; nombre: string; detalle?: string; minutos: number; registros: number }
+
+const porcentaje = (parte: number, total: number) => (total ? Math.round((parte / total) * 100) : 0);
+
+/** Frase destacada sobre la gráfica, con la cifra en morado. */
+function Titular({ children }: { children: ReactNode }) {
+  return <p className="rounded-lg bg-fondo px-4 py-3 text-sm">{children}</p>;
+}
+
+/** Barras frente al mayor; el porcentaje es sobre el total del mes, aunque se muestren solo algunas. */
+function BarrasHorizontales({ titulo, filas, total, conPosicion = false }: {
   titulo: string;
-  filas: { nombre: string; detalle?: string; minutos: number; registros: number }[];
+  filas: Fila[];
+  total: number;
+  conPosicion?: boolean;
 }) {
   const mayor = Math.max(1, ...filas.map((f) => f.minutos));
   return (
     <figure>
       <figcaption className="sr-only">{titulo}</figcaption>
-      <ul className="grid gap-3">
-        {filas.map((f) => (
-          <li key={f.detalle ?? f.nombre} tabIndex={0} className="group relative grid gap-1 rounded-md outline-offset-4">
-            <div className="flex items-baseline justify-between gap-3 text-sm">
-              <span className="truncate">
-                {f.nombre}
-                {f.detalle && <span className="ml-1.5 text-xs text-texto-suave">{f.detalle}</span>}
-              </span>
-              <span className="shrink-0 font-semibold">{formatoDuracion(f.minutos)} h</span>
+      <ol className="grid gap-4">
+        {filas.map((f, i) => (
+          <li key={f.clave} tabIndex={0} className="group relative flex items-center gap-3 rounded-md outline-offset-4">
+            {conPosicion && (
+              <span aria-hidden className={`grid size-7 shrink-0 place-items-center rounded-full text-xs font-semibold
+                ${i === 0 ? 'bg-primario text-blanco' : 'bg-suave text-primario'}`}>{i + 1}</span>
+            )}
+            <div className="grid min-w-0 flex-1 gap-1.5">
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="min-w-0 truncate text-sm font-medium">
+                  {f.nombre}
+                  {f.detalle && <span className="ml-1.5 text-xs font-normal text-texto-suave">{f.detalle}</span>}
+                </span>
+                <span className="shrink-0 text-sm">
+                  <span className="font-semibold">{formatoDuracion(f.minutos)} h</span>
+                  <span className="ml-1.5 text-xs text-texto-suave">{porcentaje(f.minutos, total)} %</span>
+                </span>
+              </div>
+              <div className="h-2.5 rounded-full bg-fondo">
+                <div className="h-full rounded-full bg-primario transition-[width] group-hover:bg-secundario"
+                  style={{ width: `${(f.minutos / mayor) * 100}%` }} />
+              </div>
+              <span className="text-xs text-texto-suave">{registrosTexto(f.registros)}</span>
             </div>
-            <div className="h-2 rounded-full bg-fondo">
-              <div className="h-full rounded-full bg-primario group-hover:bg-secundario"
-                style={{ width: `${(f.minutos / mayor) * 100}%` }} />
-            </div>
-            <Detalle>{f.nombre} · {formatoDuracion(f.minutos)} h · {registrosTexto(f.registros)}</Detalle>
+            <Detalle>
+              <strong>{f.nombre}</strong> · {formatoDuracion(f.minutos)} h · {porcentaje(f.minutos, total)} % del mes
+            </Detalle>
           </li>
         ))}
-      </ul>
+      </ol>
     </figure>
   );
 }
 
 export function HorasPorFilial({ registros }: { registros: RegistroAdmin[] }) {
   const porFilial = sumarPor(registros, (r) => r.filial);
+  const colegas = (filial: string) => new Set(
+    registros.filter((r) => r.filial === filial).map((r) => r.identificacion)).size;
+  const filas = FILIALES.map((filial) => ({
+    clave: filial, nombre: filial, ...(porFilial.get(filial) ?? { minutos: 0, registros: 0 }),
+  })).map((f) => ({ ...f, detalle: `${colegas(f.nombre)} ${colegas(f.nombre) === 1 ? 'colega' : 'colegas'}` }))
+    .sort((a, b) => b.minutos - a.minutos);
+  const total = filas.reduce((suma, f) => suma + f.minutos, 0);
   return (
-    <BarrasHorizontales titulo="Horas extras por filial" filas={FILIALES.map((filial) => ({
-      nombre: filial, ...(porFilial.get(filial) ?? { minutos: 0, registros: 0 }),
-    }))} />
+    <div className="grid gap-5">
+      <Titular>
+        <strong>{filas[0].nombre}</strong> concentra el{' '}
+        <strong className="text-primario">{porcentaje(filas[0].minutos, total)} %</strong> de las horas extras del mes.
+      </Titular>
+      <BarrasHorizontales titulo="Horas extras por filial" filas={filas} total={total} />
+    </div>
   );
 }
 
 export function ColegasConMasHoras({ registros, cuantos = 8 }: { registros: RegistroAdmin[]; cuantos?: number }) {
   const porColega = sumarPor(registros, (r) => r.identificacion);
-  const nombres = new Map(registros.map((r) => [r.identificacion, r.nombre_completo]));
+  const datos = new Map(registros.map((r) => [r.identificacion, r]));
   const filas = [...porColega.entries()]
-    .map(([cedula, total]) => ({ nombre: nombres.get(cedula) ?? cedula, detalle: cedula, ...total }))
+    .map(([cedula, total]) => ({
+      clave: cedula,
+      nombre: datos.get(cedula)?.nombre_completo ?? cedula,
+      detalle: `${cedula} · ${datos.get(cedula)?.filial}`,
+      ...total,
+    }))
     .sort((a, b) => b.minutos - a.minutos)
     .slice(0, cuantos);
-  return <BarrasHorizontales titulo="Colegas con más horas extras" filas={filas} />;
+  return (
+    <div className="grid gap-5">
+      <Titular>
+        <strong>{filas[0].nombre}</strong> lleva más horas en el mes:{' '}
+        <strong className="text-primario">{formatoDuracion(filas[0].minutos)} h</strong>.
+      </Titular>
+      <BarrasHorizontales titulo="Colegas con más horas extras" filas={filas} conPosicion
+        total={registros.reduce((suma, r) => suma + r.minutos_totales, 0)} />
+    </div>
+  );
 }

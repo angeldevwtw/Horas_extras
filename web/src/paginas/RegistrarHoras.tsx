@@ -157,7 +157,7 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
     <form onSubmit={guardar} noValidate
       className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
       <div className="rounded-xl border border-borde bg-blanco shadow-xs">
-        <Paso numero={1} titulo="Colega" descripcion="Datos de quien hizo las horas extras.">
+        <Paso numero={1} titulo="Colega" descripcion="Datos de quien hizo las horas extras." guia="colega">
           <div className="grid gap-4 sm:grid-cols-2">
             <Campo etiqueta="No. identificación" htmlFor="identificacion" error={errorVisible('identificacion')}>
               <input id="identificacion" value={datos.identificacion} inputMode="numeric"
@@ -191,10 +191,12 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
         </Paso>
 
         <Paso numero={2} titulo="Fecha y horario" descripcion="Solo días del mes en curso.">
-          <Campo etiqueta="Fecha" error={diaLleno ? undefined : errorVisible('fecha_horas_extras')}>
-            <CalendarioMes hoy={hoy} festivos={festivos} seleccionada={datos.fecha_horas_extras}
-              alElegir={elegirFecha} />
-          </Campo>
+          <div data-guia="fecha">
+            <Campo etiqueta="Fecha" error={diaLleno ? undefined : errorVisible('fecha_horas_extras')}>
+              <CalendarioMes hoy={hoy} festivos={festivos} seleccionada={datos.fecha_horas_extras}
+                alElegir={elegirFecha} />
+            </Campo>
+          </div>
           {diaLleno && (
             <div role="alert" className="flex gap-3 rounded-lg border border-error bg-error-suave p-4 text-error">
               <span aria-hidden className="grid size-6 shrink-0 place-items-center rounded-full bg-error
@@ -205,7 +207,7 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
               </div>
             </div>
           )}
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2" data-guia="horario">
             <Campo etiqueta="Hora de inicio" htmlFor="inicio" error={errorVisible('hora_inicio')}
               ayuda={finJornada ? `Día hábil: inicia al terminar la jornada (${formatoHoraAmPm(finJornada)}).` : undefined}>
               <select id="inicio" value={datos.hora_inicio} disabled={!tipo || tipo === 'habil'}
@@ -229,7 +231,7 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
           </div>
         </Paso>
 
-        <Paso numero={3} titulo="Motivo">
+        <Paso numero={3} titulo="Motivo" guia="motivo">
           <p id="nota-justificacion" className="rounded-md border-l-4 border-primario bg-suave px-4 py-3 text-sm">
             <strong>Importante:</strong> explique la causa concreta (picos de producción, emergencias
             técnicas, entregas urgentes o ausencias imprevistas del personal), evitando razones
@@ -243,7 +245,7 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
         </Paso>
       </div>
 
-      <aside className="grid gap-5 rounded-xl border border-borde bg-blanco p-5 shadow-xs lg:sticky lg:top-6">
+      <aside data-guia="resumen" className="grid gap-5 rounded-xl border border-borde bg-blanco p-5 shadow-xs lg:sticky lg:top-6">
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-texto-suave">Total del registro</p>
           <p className="mt-1 text-4xl font-semibold text-primario">

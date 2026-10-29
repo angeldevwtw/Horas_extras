@@ -44,14 +44,15 @@ export const claseEntrada = `w-full rounded-md border border-borde bg-blanco px-
   focus:ring-3 focus:ring-primario/15 disabled:bg-fondo disabled:text-texto-suave
   disabled:hover:border-borde aria-invalid:border-error`;
 
-export function Tarjeta({ titulo, descripcion, children, acciones }: {
+export function Tarjeta({ titulo, descripcion, children, acciones, guia }: {
   titulo?: string;
   descripcion?: string;
   children: ReactNode;
   acciones?: ReactNode;
+  guia?: string;
 }) {
   return (
-    <section className="rounded-xl border border-borde bg-blanco p-5 shadow-xs sm:p-6">
+    <section data-guia={guia} className="rounded-xl border border-borde bg-blanco p-5 shadow-xs sm:p-6">
       {(titulo || acciones) && (
         <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -67,14 +68,15 @@ export function Tarjeta({ titulo, descripcion, children, acciones }: {
 }
 
 /** Paso numerado dentro del formulario. */
-export function Paso({ numero, titulo, descripcion, children }: {
+export function Paso({ numero, titulo, descripcion, children, guia }: {
   numero: number;
   titulo: string;
   descripcion?: string;
   children: ReactNode;
+  guia?: string;
 }) {
   return (
-    <section aria-labelledby={`paso-${numero}`}
+    <section aria-labelledby={`paso-${numero}`} data-guia={guia}
       className="grid gap-5 border-t border-borde px-5 py-6 first:border-t-0 sm:px-6">
       <div className="flex items-start gap-3">
         <span aria-hidden className="grid size-7 shrink-0 place-items-center rounded-full bg-suave

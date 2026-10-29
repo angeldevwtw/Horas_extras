@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Guia } from './componentes/Guia';
 import { Aviso } from './componentes/ui';
 import { hoyBogota, nombreMes } from './lib/fechas';
 import { formatoDuracion, formatoHoraAmPm } from './lib/horas';
@@ -6,6 +7,7 @@ import { guardarRegistros, leerRegistros } from './lib/registrosDeLaVentana';
 import { mensajeDeError, supabase } from './lib/supabase';
 import type { Configuracion, Festivo, Registro } from './lib/tipos';
 import { Administracion } from './paginas/Administracion';
+import { pasosGuiaRegistro } from './paginas/guiaRegistro';
 import { RegistrarHoras } from './paginas/RegistrarHoras';
 import { RegistrosDeLaVentana } from './paginas/RegistrosDeLaVentana';
 
@@ -45,6 +47,7 @@ export function App() {
 
   // Sin router: #admin abre la administración y cualquier otra dirección, el registro.
   const [enAdmin, setEnAdmin] = useState(() => location.hash === '#admin');
+  const [conGuia, setConGuia] = useState(false);
   useEffect(() => {
     const alCambiar = () => setEnAdmin(location.hash === '#admin');
     window.addEventListener('hashchange', alCambiar);
@@ -68,6 +71,15 @@ export function App() {
             <span className="hidden rounded-full bg-suave px-3 py-1 text-xs font-medium text-primario first-letter:uppercase sm:inline">
               {nombreMes(hoy)}
             </span>
+            {!enAdmin && datosBase && (
+              <button type="button" onClick={() => setConGuia(true)} aria-label="Ayuda: cómo funciona la página"
+                className="flex items-center gap-2 rounded-md border border-borde bg-blanco px-3 py-2 text-sm
+                  font-semibold text-primario transition-colors hover:bg-suave">
+                <span aria-hidden className="grid size-5 place-items-center rounded-full bg-primario text-xs
+                  text-blanco">?</span>
+                Ayuda
+              </button>
+            )}
             <a href={enAdmin ? '#' : '#admin'}
               className="rounded-md bg-primario px-4 py-2 text-sm font-semibold text-blanco transition-colors hover:bg-primario-hover">
               {enAdmin ? '← Volver al registro' : 'Administración'}
@@ -94,6 +106,9 @@ export function App() {
           </>
         )}
       </main>
+      {conGuia && datosBase && (
+        <Guia pasos={pasosGuiaRegistro(datosBase.config)} alCerrar={() => setConGuia(false)} />
+      )}
     </div>
   );
 }
