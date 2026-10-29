@@ -43,8 +43,11 @@ export type ColorDelTema = (nombre: string) => string;
 
 // Los colores salen del tema (tema.css), que es la única fuente de la paleta.
 function colorDelTemaCss(nombre: string): string {
-  const hex = getComputedStyle(document.documentElement).getPropertyValue(`--color-${nombre}`);
-  return `FF${hex.trim().replace('#', '').toUpperCase()}`;
+  const hex = getComputedStyle(document.documentElement)
+    .getPropertyValue(`--color-${nombre}`).trim().replace('#', '');
+  // El CSS minificado acorta #ffffff a #fff, y Excel solo entiende seis dígitos.
+  const completo = hex.length === 3 ? hex.replace(/./g, (c) => c + c) : hex;
+  return `FF${completo.toUpperCase()}`;
 }
 
 function fechaExcel(fecha: string): Date {
