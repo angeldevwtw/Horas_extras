@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { CalendarioMes } from '../componentes/CalendarioMes';
 import { ContadorSemana } from '../componentes/ContadorSemana';
 import { SelectorCargo } from '../componentes/SelectorCargo';
-import { Aviso, Boton, Campo, claseEntrada, Tarjeta } from '../componentes/ui';
+import { Aviso, Boton, Campo, claseEntrada, Paso } from '../componentes/ui';
 import { formatoFecha, NOMBRE_TIPO_DIA, tipoDia } from '../lib/fechas';
 import { formatoDuracion, formatoHoraAmPm, minutosEntre, opcionesDeHora } from '../lib/horas';
 import { erroresLocales, FILIALES, finJornadaDe, NIVELES, nombrePropio, type Campo as NombreCampo, type DatosRegistro, type Errores } from '../lib/reglas';
@@ -151,20 +151,23 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
 
   const errorVisible = (campo: NombreCampo) => (tocados.has(campo) ? errores[campo] : undefined);
 
+  const festivo = datos.fecha_horas_extras ? festivos.get(datos.fecha_horas_extras) : undefined;
+
   return (
-    <form onSubmit={guardar} className="grid gap-6 lg:grid-cols-2" noValidate>
-      <Tarjeta titulo="Colega">
-        <div className="flex flex-col gap-4">
-          <Campo etiqueta="No. identificación" htmlFor="identificacion" error={errorVisible('identificacion')}>
-            <input id="identificacion" value={datos.identificacion} inputMode="numeric"
-              aria-invalid={!!errorVisible('identificacion')}
-              onChange={(e) => cambiar('identificacion', e.target.value)} className={claseEntrada} />
-          </Campo>
-          <Campo etiqueta="Nombre y apellidos" htmlFor="nombre" error={errorVisible('nombre_completo')}>
-            <input id="nombre" value={datos.nombre_completo} aria-invalid={!!errorVisible('nombre_completo')}
-              onChange={(e) => cambiar('nombre_completo', nombrePropio(e.target.value))} className={claseEntrada} />
-          </Campo>
+    <form onSubmit={guardar} noValidate
+      className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+      <div className="rounded-xl border border-borde bg-blanco shadow-xs">
+        <Paso numero={1} titulo="Colega" descripcion="Datos de quien hizo las horas extras.">
           <div className="grid gap-4 sm:grid-cols-2">
+            <Campo etiqueta="No. identificación" htmlFor="identificacion" error={errorVisible('identificacion')}>
+              <input id="identificacion" value={datos.identificacion} inputMode="numeric"
+                aria-invalid={!!errorVisible('identificacion')}
+                onChange={(e) => cambiar('identificacion', e.target.value)} className={claseEntrada} />
+            </Campo>
+            <Campo etiqueta="Nombre y apellidos" htmlFor="nombre" error={errorVisible('nombre_completo')}>
+              <input id="nombre" value={datos.nombre_completo} aria-invalid={!!errorVisible('nombre_completo')}
+                onChange={(e) => cambiar('nombre_completo', nombrePropio(e.target.value))} className={claseEntrada} />
+            </Campo>
             <Campo etiqueta="Cargo" htmlFor="cargo" error={errorVisible('cargo')}>
               <SelectorCargo valor={datos.cargo} invalido={!!errorVisible('cargo')}
                 alCambiar={(cargo) => cambiar('cargo', cargo)} />
@@ -177,24 +180,21 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
                 {NIVELES.map((n) => <option key={n.valor} value={n.valor}>{n.nombre}</option>)}
               </select>
             </Campo>
+            <Campo etiqueta="Filial" htmlFor="filial" error={errorVisible('filial')}>
+              <select id="filial" value={datos.filial} aria-invalid={!!errorVisible('filial')}
+                onChange={(e) => cambiar('filial', e.target.value)} className={claseEntrada}>
+                <option value="">Seleccione…</option>
+                {FILIALES.map((f) => <option key={f}>{f}</option>)}
+              </select>
+            </Campo>
           </div>
-          <Campo etiqueta="Filial" htmlFor="filial" error={errorVisible('filial')}>
-            <select id="filial" value={datos.filial} aria-invalid={!!errorVisible('filial')}
-              onChange={(e) => cambiar('filial', e.target.value)} className={claseEntrada}>
-              <option value="">Seleccione…</option>
-              {FILIALES.map((f) => <option key={f}>{f}</option>)}
-            </select>
-          </Campo>
-        </div>
-      </Tarjeta>
+        </Paso>
 
-      <Tarjeta titulo="Horas extras">
-        <div className="flex flex-col gap-4">
+        <Paso numero={2} titulo="Fecha y horario" descripcion="Solo días del mes en curso.">
           <Campo etiqueta="Fecha" error={errorVisible('fecha_horas_extras')}>
             <CalendarioMes hoy={hoy} festivos={festivos} seleccionada={datos.fecha_horas_extras}
               alElegir={elegirFecha} />
           </Campo>
-
           <div className="grid gap-4 sm:grid-cols-2">
             <Campo etiqueta="Hora de inicio" htmlFor="inicio" error={errorVisible('hora_inicio')}
               ayuda={finJornada ? `Día hábil: inicia al terminar la jornada (${formatoHoraAmPm(finJornada)}).` : undefined}>
@@ -217,45 +217,71 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
               </select>
             </Campo>
           </div>
+        </Paso>
 
-          <dl className="grid grid-cols-2 gap-2 rounded-md bg-suave p-3 text-sm">
-            <dt className="text-texto-suave">Tipo de día</dt>
-            <dd className="font-semibold">
-              {tipo ? NOMBRE_TIPO_DIA[tipo] : '—'}
-              {datos.fecha_horas_extras && festivos.get(datos.fecha_horas_extras)
-                ? ` (${festivos.get(datos.fecha_horas_extras)})` : ''}
-            </dd>
-            <dt className="text-texto-suave">Total horas extras</dt>
-            <dd className="font-semibold">{formatoDuracion(minutos)}</dd>
-          </dl>
-
-          {semana && (
-            <ContadorSemana usadosMin={semana.minutos} nuevosMin={minutos} topeMin={config.topeSemanalMin}
-              lunes={semana.lunes} domingo={semana.domingo} />
-          )}
-
-          <p id="nota-justificacion" className="rounded-md border-l-4 border-primario bg-suave px-3 py-2 text-sm">
+        <Paso numero={3} titulo="Motivo">
+          <p id="nota-justificacion" className="rounded-md border-l-4 border-primario bg-suave px-4 py-3 text-sm">
             <strong>Importante:</strong> explique la causa concreta (picos de producción, emergencias
             técnicas, entregas urgentes o ausencias imprevistas del personal), evitando razones
             genéricas o permanentes.
           </p>
           <Campo etiqueta="Justificación" htmlFor="justificacion" error={errorVisible('justificacion')}>
-            <textarea id="justificacion" rows={3} value={datos.justificacion}
+            <textarea id="justificacion" rows={4} value={datos.justificacion}
               aria-invalid={!!errorVisible('justificacion')} aria-describedby="nota-justificacion"
               onChange={(e) => cambiar('justificacion', e.target.value)} className={claseEntrada} />
           </Campo>
+        </Paso>
+      </div>
 
-          {resultado && <Aviso tipo={resultado.tipo}>{resultado.texto}</Aviso>}
+      <aside className="grid gap-5 rounded-xl border border-borde bg-blanco p-5 shadow-xs lg:sticky lg:top-6">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-texto-suave">Total del registro</p>
+          <p className="mt-1 text-4xl font-semibold text-primario">
+            {formatoDuracion(minutos)}<span className="ml-1 text-base font-medium text-texto-suave">horas</span>
+          </p>
+        </div>
 
-          <Boton type="submit" disabled={hayErrores || revisando || guardando}>
-            {guardando ? 'Guardando…' : revisando ? 'Revisando reglas…' : 'Guardar'}
+        <dl className="grid gap-3 border-y border-borde py-4 text-sm">
+          <div className="flex justify-between gap-3">
+            <dt className="text-texto-suave">Colega</dt>
+            <dd className="text-right font-medium">{datos.nombre_completo.trim() || '—'}</dd>
+          </div>
+          <div className="flex justify-between gap-3">
+            <dt className="text-texto-suave">Fecha</dt>
+            <dd className="text-right font-medium">
+              {datos.fecha_horas_extras ? formatoFecha(datos.fecha_horas_extras) : '—'}
+              {tipo && (
+                <span className="block text-xs font-normal text-texto-suave">
+                  {NOMBRE_TIPO_DIA[tipo]}{festivo ? ` · ${festivo}` : ''}
+                </span>
+              )}
+            </dd>
+          </div>
+          <div className="flex justify-between gap-3">
+            <dt className="text-texto-suave">Horario</dt>
+            <dd className="text-right font-medium">
+              {datos.hora_inicio && datos.hora_final
+                ? `${formatoHoraAmPm(datos.hora_inicio)} – ${formatoHoraAmPm(datos.hora_final)}` : '—'}
+            </dd>
+          </div>
+        </dl>
+
+        {semana && (
+          <ContadorSemana usadosMin={semana.minutos} nuevosMin={minutos} topeMin={config.topeSemanalMin}
+            lunes={semana.lunes} domingo={semana.domingo} />
+        )}
+
+        {resultado && <Aviso tipo={resultado.tipo}>{resultado.texto}</Aviso>}
+
+        <div className="grid gap-2">
+          <Boton type="submit" className="py-2.5" disabled={hayErrores || revisando || guardando}>
+            {guardando ? 'Guardando…' : revisando ? 'Revisando reglas…' : 'Guardar registro'}
           </Boton>
           {[...tocados].some((campo) => errores[campo]) && (
-            <p className="text-sm text-texto-suave">Corrija los campos marcados para poder guardar.</p>
+            <p className="text-center text-xs text-texto-suave">Corrija los campos marcados para poder guardar.</p>
           )}
         </div>
-      </Tarjeta>
+      </aside>
     </form>
   );
 }
-

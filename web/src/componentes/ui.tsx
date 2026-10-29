@@ -29,32 +29,61 @@ export function Campo({ etiqueta, error, ayuda, htmlFor, children }: {
   children: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-1">
-      <label htmlFor={htmlFor} className="text-sm font-semibold">{etiqueta}</label>
+    <div className="flex flex-col gap-1.5">
+      <label htmlFor={htmlFor} className="text-sm font-medium">{etiqueta}</label>
       {children}
       {error
         ? <p role="alert" className="text-sm text-error">{error}</p>
-        : ayuda && <p className="text-sm text-texto-suave">{ayuda}</p>}
+        : ayuda && <p className="text-xs text-texto-suave">{ayuda}</p>}
     </div>
   );
 }
 
 export const claseEntrada = `w-full rounded-md border border-borde bg-blanco px-3 py-2 text-sm
-  disabled:bg-fondo disabled:text-texto-suave aria-invalid:border-error`;
+  transition-colors hover:border-texto-suave focus:border-primario focus:outline-none
+  focus:ring-3 focus:ring-primario/15 disabled:bg-fondo disabled:text-texto-suave
+  disabled:hover:border-borde aria-invalid:border-error`;
 
-export function Tarjeta({ titulo, children, acciones }: {
+export function Tarjeta({ titulo, descripcion, children, acciones }: {
   titulo?: string;
+  descripcion?: string;
   children: ReactNode;
   acciones?: ReactNode;
 }) {
   return (
-    <section className="rounded-lg border border-borde bg-blanco p-4 sm:p-6">
+    <section className="rounded-xl border border-borde bg-blanco p-5 shadow-xs sm:p-6">
       {(titulo || acciones) && (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-          {titulo && <h2 className="text-lg font-semibold text-primario">{titulo}</h2>}
+        <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            {titulo && <h2 className="text-base font-semibold">{titulo}</h2>}
+            {descripcion && <p className="mt-1 text-sm text-texto-suave">{descripcion}</p>}
+          </div>
           {acciones}
         </div>
       )}
+      {children}
+    </section>
+  );
+}
+
+/** Paso numerado dentro del formulario. */
+export function Paso({ numero, titulo, descripcion, children }: {
+  numero: number;
+  titulo: string;
+  descripcion?: string;
+  children: ReactNode;
+}) {
+  return (
+    <section aria-labelledby={`paso-${numero}`}
+      className="grid gap-5 border-t border-borde px-5 py-6 first:border-t-0 sm:px-6">
+      <div className="flex items-start gap-3">
+        <span aria-hidden className="grid size-7 shrink-0 place-items-center rounded-full bg-suave
+          text-sm font-semibold text-primario">{numero}</span>
+        <div>
+          <h2 id={`paso-${numero}`} className="text-base font-semibold">{titulo}</h2>
+          {descripcion && <p className="mt-0.5 text-sm text-texto-suave">{descripcion}</p>}
+        </div>
+      </div>
       {children}
     </section>
   );

@@ -36,10 +36,8 @@ export function DescargaConsolidada({ hoy }: { hoy: string }) {
   }
 
   return (
-    <Tarjeta titulo="Descarga consolidada">
-      <p className="mb-4 text-sm text-texto-suave">
-        Excel con todo lo registrado en el mes, por cualquier persona. Requiere la clave de descarga.
-      </p>
+    <Tarjeta titulo="Descarga consolidada"
+      descripcion="Excel con todo lo registrado en el mes, por cualquier persona. Requiere la clave de descarga.">
       <form onSubmit={descargar} className="grid items-end gap-3 sm:grid-cols-[auto_1fr_auto]">
         <Campo etiqueta="Mes" htmlFor="mes-descarga">
           <input id="mes-descarga" type="month" required value={mes} max={hoy.slice(0, 7)}

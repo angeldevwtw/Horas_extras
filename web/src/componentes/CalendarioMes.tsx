@@ -16,36 +16,46 @@ export function CalendarioMes({ hoy, festivos, seleccionada, alElegir }: {
 
   return (
     <div>
-      <p className="mb-2 text-sm font-semibold first-letter:uppercase">{nombreMes(hoy)}</p>
-      <div className="grid grid-cols-7 gap-1 text-center text-xs">
-        {DIAS.map((d) => <span key={d} className="py-1 font-semibold text-texto-suave">{d}</span>)}
+      <p className="mb-3 text-sm font-semibold first-letter:uppercase">{nombreMes(hoy)}</p>
+      <div className="grid grid-cols-7 gap-1 text-center">
+        {DIAS.map((d) => (
+          <span key={d} className="pb-1 text-xs font-medium uppercase tracking-wide text-texto-suave">{d}</span>
+        ))}
         {Array.from({ length: huecos }, (_, i) => <span key={`h${i}`} />)}
         {dias.map((fecha) => {
           const tipo = tipoDia(fecha, fechasFestivas);
           const elegida = fecha === seleccionada;
           const esDomingo = diaDeSemana(fecha) === 0;
           const clase = elegida
-            ? 'bg-primario text-blanco'
+            ? 'bg-primario font-semibold text-blanco'
             : esDomingo
-              ? 'cursor-not-allowed bg-fondo text-texto-suave line-through'
+              ? 'cursor-not-allowed text-texto-suave line-through'
               : tipo === 'habil'
-              ? 'bg-blanco hover:bg-suave'
-              : 'bg-seleccion text-secundario hover:bg-suave';
+                ? 'text-texto hover:bg-suave'
+                : 'bg-seleccion font-medium text-secundario hover:bg-suave';
           return (
             <button key={fecha} type="button" onClick={() => alElegir(fecha)} disabled={esDomingo}
               title={esDomingo ? 'Domingo: no se registran horas extras'
                 : festivos.get(fecha) ?? (tipo === 'habil' ? undefined : 'Sábado')}
               aria-pressed={elegida}
-              className={`rounded-md border border-borde py-2 text-sm ${clase}
-                ${fecha === hoy && !elegida ? 'font-bold underline' : ''}`}>
+              className={`h-10 rounded-md text-sm transition-colors ${clase}
+                ${fecha === hoy && !elegida ? 'ring-1 ring-inset ring-primario' : ''}`}>
               {Number(fecha.slice(8))}
             </button>
           );
         })}
       </div>
-      <p className="mt-2 text-xs text-texto-suave">
-        Resaltados: sábados y festivos (máximo 2:00 horas). Los domingos no se registran.
-      </p>
+      <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-texto-suave">
+        <li className="flex items-center gap-2">
+          <span aria-hidden className="size-3 rounded-sm bg-seleccion" />
+          Sábado o festivo: máximo 2:00 horas
+        </li>
+        <li className="flex items-center gap-2">
+          <span aria-hidden className="size-3 rounded-sm ring-1 ring-inset ring-primario" />
+          Hoy
+        </li>
+        <li><span className="line-through">Dom</span>: no se registran horas extras</li>
+      </ul>
     </div>
   );
 }

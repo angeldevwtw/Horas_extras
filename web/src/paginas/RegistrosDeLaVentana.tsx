@@ -30,56 +30,55 @@ export function RegistrosDeLaVentana({ registros, hoy, alAnular }: {
   return (
     <Tarjeta
       titulo="Registrado en esta ventana"
+      descripcion="Esta lista se borra al cerrar la pestaña. Lo registrado sí queda guardado, cuenta para los topes y sale en la descarga consolidada del mes."
       acciones={(
         <Boton disabled={!vigentes.length}
           onClick={() => descargarFormato(vigentes, `horas-extras-${hoy}.xlsx`)}>
           Descargar Excel ({vigentes.length})
         </Boton>
       )}>
-      <p className="mb-3 text-sm text-texto-suave">
-        Esta lista se borra al cerrar la pestaña. Lo registrado sí queda guardado, cuenta para los
-        topes y sale en la descarga consolidada del mes.
-      </p>
       {error && <div className="mb-3"><Aviso tipo="error">{error}</Aviso></div>}
 
       {!registros.length ? (
-        <p className="py-4 text-center text-sm text-texto-suave">Aún no hay registros.</p>
+        <p className="rounded-lg border border-dashed border-borde py-8 text-center text-sm text-texto-suave">
+          Aún no hay registros en esta ventana.
+        </p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[860px] text-left text-sm">
-            <thead className="border-b border-borde text-texto-suave">
+            <thead className="border-b border-borde text-xs uppercase tracking-wide text-texto-suave">
               <tr>
-                <th className="p-2">Código</th>
-                <th className="p-2">Fecha</th>
-                <th className="p-2">Colega</th>
-                <th className="p-2">Cargo / nivel</th>
-                <th className="p-2">Filial</th>
-                <th className="p-2">Horario</th>
-                <th className="p-2">Total</th>
-                <th className="p-2">Estado</th>
-                <th className="p-2"><span className="sr-only">Acciones</span></th>
+                <th className="px-3 py-2.5">Código</th>
+                <th className="px-3 py-2.5">Fecha</th>
+                <th className="px-3 py-2.5">Colega</th>
+                <th className="px-3 py-2.5">Cargo / nivel</th>
+                <th className="px-3 py-2.5">Filial</th>
+                <th className="px-3 py-2.5">Horario</th>
+                <th className="px-3 py-2.5">Total</th>
+                <th className="px-3 py-2.5">Estado</th>
+                <th className="px-3 py-2.5"><span className="sr-only">Acciones</span></th>
               </tr>
             </thead>
             <tbody>
               {registros.map((r) => (
-                <tr key={r.id} className="border-b border-borde align-top">
-                  <td className="p-2 font-mono">{r.codigo}</td>
-                  <td className="p-2">
+                <tr key={r.id} className="border-b border-borde align-top last:border-b-0 hover:bg-fondo">
+                  <td className="px-3 py-2.5 font-mono">{r.codigo}</td>
+                  <td className="px-3 py-2.5">
                     {formatoFecha(r.fecha_horas_extras)}
                     <div className="text-xs text-texto-suave">{NOMBRE_TIPO_DIA[r.tipo_dia]}</div>
                   </td>
-                  <td className="p-2">
+                  <td className="px-3 py-2.5">
                     {r.nombre_completo}
                     <div className="text-xs text-texto-suave">{r.identificacion}</div>
                   </td>
-                  <td className="p-2">{r.cargo}<div className="text-xs text-texto-suave">Nivel {r.nivel}</div></td>
-                  <td className="p-2">{r.filial}</td>
-                  <td className="p-2 whitespace-nowrap">
+                  <td className="px-3 py-2.5">{r.cargo}<div className="text-xs text-texto-suave">Nivel {r.nivel}</div></td>
+                  <td className="px-3 py-2.5">{r.filial}</td>
+                  <td className="px-3 py-2.5 whitespace-nowrap">
                     {formatoHoraAmPm(r.hora_inicio)} – {formatoHoraAmPm(r.hora_final)}
                   </td>
-                  <td className="p-2">{formatoDuracion(r.minutos_totales)}</td>
-                  <td className="p-2"><InsigniaEstado estado={r.estado} /></td>
-                  <td className="p-2">
+                  <td className="px-3 py-2.5">{formatoDuracion(r.minutos_totales)}</td>
+                  <td className="px-3 py-2.5"><InsigniaEstado estado={r.estado} /></td>
+                  <td className="px-3 py-2.5">
                     {r.estado === 'registrada' && anulando?.id !== r.id && (
                       <Boton variante="peligro" className="px-2 py-1"
                         onClick={() => setAnulando({ id: r.id, motivo: '' })}>

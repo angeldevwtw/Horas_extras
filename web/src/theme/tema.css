@@ -26,12 +26,13 @@
   --color-texto: #1c1c21;
   --color-texto-suave: #5c5c66;
 
-  --font-sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-sans: "Figtree Variable", "Segoe UI", system-ui, sans-serif;
 }
 
 @layer base {
   body {
     @apply bg-fondo text-texto font-sans antialiased;
+    font-feature-settings: "tnum";
   }
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-primario;

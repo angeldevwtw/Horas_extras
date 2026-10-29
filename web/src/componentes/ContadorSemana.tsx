@@ -14,19 +14,24 @@ export function ContadorSemana({ usadosMin, nuevosMin, topeMin, lunes, domingo }
   const colorBarra = total >= topeMin ? 'bg-error' : total >= topeMin * 0.8 ? 'bg-alerta' : 'bg-primario';
 
   return (
-    <div className="rounded-md border border-borde bg-suave p-3 text-sm">
-      <p>
-        Semana del {formatoFecha(lunes)} al {formatoFecha(domingo)}: lleva{' '}
-        <strong>{formatoDuracion(usadosMin)}</strong> de {formatoDuracion(topeMin)} horas y le
-        quedan <strong>{formatoDuracion(Math.max(0, topeMin - usadosMin))}</strong>.
-      </p>
-      {nuevosMin > 0 && (
-        <p className="text-texto-suave">Con este registro quedaría en {formatoDuracion(total)}.</p>
-      )}
-      <div className="mt-2 h-2 overflow-hidden rounded-full bg-blanco" role="progressbar"
-        aria-valuemin={0} aria-valuemax={topeMin} aria-valuenow={total}>
-        <div className={`h-full ${colorBarra}`} style={{ width: `${porcentaje}%` }} />
+    <div className="grid gap-2 text-sm">
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-texto-suave">
+          Semana {formatoFecha(lunes).slice(0, 5)} – {formatoFecha(domingo).slice(0, 5)}
+        </span>
+        <span className="font-semibold">
+          {formatoDuracion(total)} <span className="font-normal text-texto-suave">/ {formatoDuracion(topeMin)}</span>
+        </span>
       </div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-fondo" role="progressbar"
+        aria-label="Horas extras de la semana" aria-valuemin={0} aria-valuemax={topeMin} aria-valuenow={total}>
+        <div className={`h-full rounded-full transition-[width] ${colorBarra}`} style={{ width: `${porcentaje}%` }} />
+      </div>
+      <p className="text-xs text-texto-suave">
+        Lleva {formatoDuracion(usadosMin)}
+        {nuevosMin > 0 && <> y este registro suma {formatoDuracion(nuevosMin)}</>}.
+        Le quedan {formatoDuracion(Math.max(0, topeMin - total))} esta semana.
+      </p>
     </div>
   );
 }
