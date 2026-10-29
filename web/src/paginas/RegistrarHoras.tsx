@@ -234,12 +234,12 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
               lunes={semana.lunes} domingo={semana.domingo} />
           )}
 
+          <p id="nota-justificacion" className="rounded-md border-l-4 border-primario bg-suave px-3 py-2 text-sm">
+            <strong>Importante:</strong> explique la causa concreta (picos de producción, emergencias
+            técnicas, entregas urgentes o ausencias imprevistas del personal), evitando razones
+            genéricas o permanentes.
+          </p>
           <Campo etiqueta="Justificación" htmlFor="justificacion" error={errorVisible('justificacion')}>
-            <p id="nota-justificacion" className="rounded-md border-l-4 border-primario bg-suave px-3 py-2 text-sm">
-              <strong>Importante:</strong> explique la causa concreta (picos de producción, emergencias
-              técnicas, entregas urgentes o ausencias imprevistas del personal), evitando razones
-              genéricas o permanentes.
-            </p>
             <textarea id="justificacion" rows={3} value={datos.justificacion}
               aria-invalid={!!errorVisible('justificacion')} aria-describedby="nota-justificacion"
               onChange={(e) => cambiar('justificacion', e.target.value)} className={claseEntrada} />
