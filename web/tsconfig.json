@@ -10,7 +10,7 @@
     "noUnusedParameters": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "types": ["vite/client", "vitest/config"]
+    "types": ["vite/client", "vitest/config", "node"]
   },
   "include": ["src", "tests", "vite.config.ts"]
 }
