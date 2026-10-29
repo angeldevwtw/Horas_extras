@@ -111,6 +111,11 @@ Es un sitio estático. En Netlify, Vercel o Cloudflare Pages:
 - Carpeta publicada: `web/dist` (o `dist` si la carpeta base ya es `web`)
 - Variables de entorno: `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`
 
+En Vercel, la integración con Supabase crea variables con otros nombres
+(`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`…) que la app no lee: Vite solo expone
+las que empiezan por `VITE_`, así que esas dos se agregan a mano. La integración tampoco crea las
+tablas; eso lo hace `npx supabase db push`.
+
 Después de publicar, actualizar la *Site URL* del paso 2.
 
 ## Datos personales
