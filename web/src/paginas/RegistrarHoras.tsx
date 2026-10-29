@@ -4,7 +4,7 @@ import { ContadorSemana } from '../componentes/ContadorSemana';
 import { Aviso, Boton, Campo, claseEntrada, Tarjeta } from '../componentes/ui';
 import { formatoFecha, NOMBRE_TIPO_DIA, tipoDia } from '../lib/fechas';
 import { formatoDuracion, formatoHoraAmPm, minutosEntre, opcionesDeHora } from '../lib/horas';
-import { erroresLocales, NIVELES, type Campo as NombreCampo, type DatosRegistro, type Errores } from '../lib/reglas';
+import { erroresLocales, FILIALES, NIVELES, type Campo as NombreCampo, type DatosRegistro, type Errores } from '../lib/reglas';
 import { mensajeDeError, supabase } from '../lib/supabase';
 import type { Configuracion, Registro } from '../lib/tipos';
 
@@ -166,8 +166,11 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
             </Campo>
           </div>
           <Campo etiqueta="Filial" htmlFor="filial" error={errorVisible('filial')}>
-            <input id="filial" value={datos.filial} aria-invalid={!!errorVisible('filial')}
-              onChange={(e) => cambiar('filial', e.target.value)} className={claseEntrada} />
+            <select id="filial" value={datos.filial} aria-invalid={!!errorVisible('filial')}
+              onChange={(e) => cambiar('filial', e.target.value)} className={claseEntrada}>
+              <option value="">Seleccione…</option>
+              {FILIALES.map((f) => <option key={f}>{f}</option>)}
+            </select>
           </Campo>
         </div>
       </Tarjeta>

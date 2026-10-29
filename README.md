@@ -22,6 +22,7 @@ al pie la política y las líneas de firma.
 | Hora final posterior a la de inicio, sin pasar de medianoche | `HE_HORAS_INVALIDAS` |
 | Sin horarios cruzados el mismo día | `HE_SOLAPAMIENTO` |
 | Justificación obligatoria | `HE_JUSTIFICACION` |
+| Filial: Banco, Sufi, Leasing o Empleados | `HE_FILIAL` |
 
 Los topes cuentan todo lo registrado para el colega, desde cualquier equipo. Los registros no se
 editan ni se borran: se anulan con un motivo y las horas anuladas dejan de contar.
@@ -116,10 +117,10 @@ Desde la página no se puede leer nada de lo guardado. En el panel de Supabase:
 
 ```bash
 npm install          # en la raíz, una sola vez
-npm run test:sql     # reglas y permisos en la base (88 pruebas)
+npm run test:sql     # reglas y permisos en la base (95 pruebas)
 
 cd web
-npm test             # minutos, tipo de día, formato H:MM y el Excel (31 pruebas)
+npm test             # minutos, tipo de día, formato H:MM y el Excel (32 pruebas)
 ```
 
 Las pruebas SQL levantan un Postgres en memoria (PGlite) con lo mínimo de Supabase

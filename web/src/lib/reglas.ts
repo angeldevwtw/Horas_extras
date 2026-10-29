@@ -9,6 +9,8 @@ export const NIVELES = [
   { valor: 78, nombre: '78 - Conductor' },
 ] as const;
 
+export const FILIALES = ['Banco', 'Sufi', 'Leasing', 'Empleados'] as const;
+
 export type Campo = 'identificacion' | 'nombre_completo' | 'cargo' | 'nivel' | 'filial'
   | 'fecha_horas_extras' | 'hora_inicio' | 'hora_final' | 'justificacion';
 
@@ -42,7 +44,7 @@ export function erroresLocales(datos: DatosRegistro, reglas: Reglas): Errores {
   }
   if (!datos.nombre_completo.trim()) errores.nombre_completo = 'El nombre es obligatorio.';
   if (!datos.cargo.trim()) errores.cargo = 'El cargo es obligatorio.';
-  if (!datos.filial.trim()) errores.filial = 'La filial es obligatoria.';
+  if (!FILIALES.some((f) => f === datos.filial)) errores.filial = 'Seleccione la filial.';
   if (!NIVELES.some((n) => n.valor === datos.nivel)) {
     errores.nivel = 'Solo niveles 68, 73 o 78.';
   }

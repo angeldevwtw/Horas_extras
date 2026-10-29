@@ -35,7 +35,7 @@ create function prueba.reg(
 ) returns bigint language sql as $$
   insert into prueba.claves (id, clave)
   select id, clave_anulacion from public.registrar_horas(p_identificacion,
-    'Colega ' || p_identificacion, 'Cargo de prueba', p_nivel, 'Filial A', p_fecha, p_inicio,
+    'Colega ' || p_identificacion, 'Cargo de prueba', p_nivel, 'Banco', p_fecha, p_inicio,
     p_final, p_justificacion)
   returning id
 $$;

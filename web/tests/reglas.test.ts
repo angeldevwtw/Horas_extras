@@ -14,7 +14,7 @@ const valido: DatosRegistro = {
   nombre_completo: 'Colega Ficticio',
   cargo: 'Analista',
   nivel: 68,
-  filial: 'Filial A',
+  filial: 'Banco',
   fecha_horas_extras: '2026-10-05',
   hora_inicio: '17:00',
   hora_final: '19:00',
@@ -49,6 +49,13 @@ describe('erroresLocales', () => {
   it('la hora final debe ser posterior a la de inicio', () => {
     const cruzaMedianoche = { fecha_horas_extras: '2026-10-17', hora_inicio: '23:00', hora_final: '01:00' };
     expect(errores(cruzaMedianoche).hora_final).toMatch(/posterior/);
+  });
+  it('la filial debe ser una de las cuatro', () => {
+    for (const filial of ['Banco', 'Sufi', 'Leasing', 'Empleados']) {
+      expect(errores({ filial }).filial).toBeUndefined();
+    }
+    expect(errores({ filial: 'Otra' }).filial).toBeDefined();
+    expect(errores({ filial: '' }).filial).toBeDefined();
   });
   it('la justificación es obligatoria', () => {
     expect(errores({ justificacion: '  ' }).justificacion).toBeDefined();

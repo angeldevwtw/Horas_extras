@@ -10,7 +10,7 @@ const registro: Registro = {
   nombre_completo: 'Colega Uno Ficticio',
   cargo: 'Asistente de prueba',
   nivel: 73,
-  filial: 'Filial A',
+  filial: 'Banco',
   fecha_horas_extras: '2026-09-01',
   hora_inicio: '17:00:00',
   hora_final: '18:00:00',
@@ -36,7 +36,7 @@ it('arma el formato con el encabezado combinado, los formatos y el pie', async (
     .toEqual(['Fecha aprobada', 'Hora de inicio', 'Hora final', 'Total horas extras']);
 
   const fila = hoja.getRow(6);
-  expect(fila.getCell(1).value).toBe('Filial A');
+  expect(fila.getCell(1).value).toBe('Banco');
   expect(fila.getCell(2).value).toBe('900000001');
   expect(fila.getCell(5).value).toBe(73);
   expect((fila.getCell(6).value as Date).toISOString().slice(0, 10)).toBe('2026-09-01');
