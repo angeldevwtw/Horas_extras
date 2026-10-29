@@ -23,14 +23,18 @@ export function CalendarioMes({ hoy, festivos, seleccionada, alElegir }: {
         {dias.map((fecha) => {
           const tipo = tipoDia(fecha, fechasFestivas);
           const elegida = fecha === seleccionada;
+          const esDomingo = diaDeSemana(fecha) === 0;
           const clase = elegida
             ? 'bg-primario text-blanco'
-            : tipo === 'habil'
+            : esDomingo
+              ? 'cursor-not-allowed bg-fondo text-texto-suave line-through'
+              : tipo === 'habil'
               ? 'bg-blanco hover:bg-suave'
               : 'bg-seleccion text-secundario hover:bg-suave';
           return (
-            <button key={fecha} type="button" onClick={() => alElegir(fecha)}
-              title={festivos.get(fecha) ?? (tipo === 'habil' ? undefined : 'Fin de semana')}
+            <button key={fecha} type="button" onClick={() => alElegir(fecha)} disabled={esDomingo}
+              title={esDomingo ? 'Domingo: no se registran horas extras'
+                : festivos.get(fecha) ?? (tipo === 'habil' ? undefined : 'Sábado')}
               aria-pressed={elegida}
               className={`rounded-md border border-borde py-2 text-sm ${clase}
                 ${fecha === hoy && !elegida ? 'font-bold underline' : ''}`}>
@@ -40,7 +44,7 @@ export function CalendarioMes({ hoy, festivos, seleccionada, alElegir }: {
         })}
       </div>
       <p className="mt-2 text-xs text-texto-suave">
-        Resaltados: sábados, domingos y festivos (máximo 2:00 horas).
+        Resaltados: sábados y festivos (máximo 2:00 horas). Los domingos no se registran.
       </p>
     </div>
   );

@@ -5,7 +5,7 @@ select prueba.anonimo();
 select prueba.debe_funcionar('Primer día del mes en curso se acepta',
   $$select prueba.reg('7001', '2026-10-01', '17:00', '18:00')$$);
 select prueba.debe_funcionar('Último día hábil del mes en curso se acepta',
-  $$select prueba.reg('7002', '2026-10-30', '17:00', '18:00')$$);
+  $$select prueba.reg('7002', '2026-10-30', '16:30', '17:30')$$);
 select prueba.debe_fallar('Mes anterior se rechaza',
   $$select prueba.reg('7003', '2026-09-30', '17:00', '18:00')$$, 'HE_FECHA_FUERA_DEL_MES');
 select prueba.debe_fallar('Mes siguiente se rechaza',

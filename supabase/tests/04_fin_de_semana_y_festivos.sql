@@ -1,4 +1,4 @@
--- Sábado, domingo o festivo: máximo 2 horas, a cualquier hora del día.
+-- Sábado o festivo: máximo 2 horas, a cualquier hora del día.
 select prueba.reloj('2026-10-01 08:00');
 select prueba.anonimo();
 
@@ -6,8 +6,8 @@ select prueba.debe_funcionar('Sábado: 2:00 en la mañana se acepta',
   $$select prueba.reg('4001', '2026-10-03', '08:00', '10:00')$$);
 select prueba.debe_fallar('Sábado: 2:30 se rechaza',
   $$select prueba.reg('4002', '2026-10-03', '08:00', '10:30')$$, 'HE_TOPE_FIN_DE_SEMANA');
-select prueba.debe_funcionar('Domingo: 2:00 en la tarde se acepta',
-  $$select prueba.reg('4003', '2026-10-11', '14:00', '16:00')$$);
+select prueba.debe_funcionar('Sábado: 2:00 en la tarde también se acepta',
+  $$select prueba.reg('4003', '2026-10-24', '14:00', '16:00')$$);
 select prueba.debe_funcionar('Lunes festivo (12 de octubre): 2:00 sin empezar a las 5:00 PM',
   $$select prueba.reg('4004', '2026-10-12', '09:00', '11:00')$$);
 select prueba.como_postgres();

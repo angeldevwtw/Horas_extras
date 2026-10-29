@@ -1,6 +1,6 @@
 // Réplica de las reglas que se pueden revisar sin consultar la base, para avisar mientras se
 // diligencia. La base vuelve a validar todo al guardar; sus mensajes son los que mandan.
-import { mismoMes, nombreMes, tipoDia } from './fechas';
+import { diaDeSemana, mismoMes, nombreMes, tipoDia } from './fechas';
 import { formatoDuracion, formatoHoraAmPm, minutosEntre } from './horas';
 
 export const NIVELES = [
@@ -43,8 +43,14 @@ export interface Reglas {
   hoy: string;
   festivos: Set<string>;
   finJornada: string;
+  finJornadaViernes: string;
   topeDiarioMin: number;
   topeFinSemanaMin: number;
+}
+
+/** Hora en que termina la jornada ese día: los viernes es más temprano. */
+export function finJornadaDe(fecha: string, reglas: Pick<Reglas, 'finJornada' | 'finJornadaViernes'>): string {
+  return diaDeSemana(fecha) === 5 ? reglas.finJornadaViernes : reglas.finJornada;
 }
 
 export function erroresLocales(datos: DatosRegistro, reglas: Reglas): Errores {
@@ -68,6 +74,10 @@ export function erroresLocales(datos: DatosRegistro, reglas: Reglas): Errores {
   if (!mismoMes(datos.fecha_horas_extras, reglas.hoy)) {
     errores.fecha_horas_extras = `La fecha debe ser del mes en curso (${nombreMes(reglas.hoy)}).`;
   }
+  if (diaDeSemana(datos.fecha_horas_extras) === 0) {
+    errores.fecha_horas_extras = 'Los domingos no se pueden registrar horas extras.';
+    return errores;
+  }
 
   if (!datos.hora_inicio || !datos.hora_final) {
     errores.hora_final = 'Seleccione la hora de inicio y la hora final.';
@@ -80,14 +90,15 @@ export function erroresLocales(datos: DatosRegistro, reglas: Reglas): Errores {
   }
 
   if (tipoDia(datos.fecha_horas_extras, reglas.festivos) === 'habil') {
-    if (datos.hora_inicio !== reglas.finJornada) {
-      errores.hora_inicio = `En día hábil las horas extras empiezan a las ${formatoHoraAmPm(reglas.finJornada)}, sin pausas.`;
+    const fin = finJornadaDe(datos.fecha_horas_extras, reglas);
+    if (datos.hora_inicio !== fin) {
+      errores.hora_inicio = `Ese día las horas extras empiezan a las ${formatoHoraAmPm(fin)}, sin pausas.`;
     }
     if (minutos > reglas.topeDiarioMin) {
       errores.hora_final = `Máximo ${formatoDuracion(reglas.topeDiarioMin)} horas en día hábil.`;
     }
   } else if (minutos > reglas.topeFinSemanaMin) {
-    errores.hora_final = `Máximo ${formatoDuracion(reglas.topeFinSemanaMin)} horas en sábado, domingo o festivo.`;
+    errores.hora_final = `Máximo ${formatoDuracion(reglas.topeFinSemanaMin)} horas en sábado o festivo.`;
   }
   return errores;
 }

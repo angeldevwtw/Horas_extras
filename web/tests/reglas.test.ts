@@ -5,6 +5,7 @@ const reglas: Reglas = {
   hoy: '2026-10-15',
   festivos: new Set(['2026-10-12']),
   finJornada: '17:00',
+  finJornadaViernes: '16:30',
   topeDiarioMin: 120,
   topeFinSemanaMin: 120,
 };
@@ -56,6 +57,15 @@ describe('erroresLocales', () => {
     }
     expect(errores({ filial: 'Otra' }).filial).toBeDefined();
     expect(errores({ filial: '' }).filial).toBeDefined();
+  });
+  it('los viernes las horas extras empiezan a las 4:30 PM', () => {
+    const viernes = { fecha_horas_extras: '2026-10-09' };
+    expect(errores({ ...viernes, hora_inicio: '16:30', hora_final: '18:30' })).toEqual({});
+    expect(errores({ ...viernes, hora_inicio: '17:00', hora_final: '18:00' }).hora_inicio).toMatch(/4:30 PM/);
+  });
+  it('los domingos no se registran', () => {
+    expect(errores({ fecha_horas_extras: '2026-10-11', hora_inicio: '08:00', hora_final: '09:00' })
+      .fecha_horas_extras).toMatch(/domingos/);
   });
   it('la justificación es obligatoria', () => {
     expect(errores({ justificacion: '  ' }).justificacion).toBeDefined();

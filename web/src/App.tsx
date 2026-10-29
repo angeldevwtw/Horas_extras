@@ -21,6 +21,7 @@ async function leerDatosBase(): Promise<DatosBase> {
   return {
     config: {
       finJornada: valor('fin_jornada'),
+      finJornadaViernes: valor('fin_jornada_viernes'),
       topeDiarioMin: Number(valor('tope_diario_min')),
       topeFinSemanaMin: Number(valor('tope_fin_semana_min')),
       topeSemanalMin: Number(valor('tope_semanal_min')),

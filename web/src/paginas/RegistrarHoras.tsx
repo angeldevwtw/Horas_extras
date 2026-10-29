@@ -5,7 +5,7 @@ import { SelectorCargo } from '../componentes/SelectorCargo';
 import { Aviso, Boton, Campo, claseEntrada, Tarjeta } from '../componentes/ui';
 import { formatoFecha, NOMBRE_TIPO_DIA, tipoDia } from '../lib/fechas';
 import { formatoDuracion, formatoHoraAmPm, minutosEntre, opcionesDeHora } from '../lib/horas';
-import { erroresLocales, FILIALES, NIVELES, type Campo as NombreCampo, type DatosRegistro, type Errores } from '../lib/reglas';
+import { erroresLocales, FILIALES, finJornadaDe, NIVELES, type Campo as NombreCampo, type DatosRegistro, type Errores } from '../lib/reglas';
 import { mensajeDeError, supabase } from '../lib/supabase';
 import type { Configuracion, Registro } from '../lib/tipos';
 
@@ -33,6 +33,7 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
   const fechasFestivas = useMemo(() => new Set(festivos.keys()), [festivos]);
   const tipo = datos.fecha_horas_extras ? tipoDia(datos.fecha_horas_extras, fechasFestivas) : null;
   const topeDia = tipo === 'habil' ? config.topeDiarioMin : config.topeFinSemanaMin;
+  const finJornada = tipo === 'habil' ? finJornadaDe(datos.fecha_horas_extras, config) : null;
   const minutos = datos.hora_inicio && datos.hora_final
     ? Math.max(0, minutosEntre(datos.hora_inicio, datos.hora_final)) : 0;
 
@@ -57,7 +58,7 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
   function elegirFecha(fecha: string) {
     const esHabil = tipoDia(fecha, fechasFestivas) === 'habil';
     setDatos((d) => {
-      const inicio = esHabil ? config.finJornada : d.hora_inicio;
+      const inicio = esHabil ? finJornadaDe(fecha, config) : d.hora_inicio;
       const tope = esHabil ? config.topeDiarioMin : config.topeFinSemanaMin;
       const finalValido = inicio && d.hora_final
         && minutosEntre(inicio, d.hora_final) > 0 && minutosEntre(inicio, d.hora_final) <= tope;
@@ -185,12 +186,12 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Campo etiqueta="Hora de inicio" htmlFor="inicio" error={errorVisible('hora_inicio')}
-              ayuda={tipo === 'habil' ? `Día hábil: inicia al terminar la jornada (${formatoHoraAmPm(config.finJornada)}).` : undefined}>
+              ayuda={finJornada ? `Día hábil: inicia al terminar la jornada (${formatoHoraAmPm(finJornada)}).` : undefined}>
               <select id="inicio" value={datos.hora_inicio} disabled={!tipo || tipo === 'habil'}
                 aria-invalid={!!errorVisible('hora_inicio')}
                 onChange={(e) => cambiar('hora_inicio', e.target.value)} className={claseEntrada}>
                 <option value="">Seleccione…</option>
-                {(tipo === 'habil' ? [config.finJornada] : HORAS.slice(0, -1)).map((h) => (
+                {(finJornada ? [finJornada] : HORAS.slice(0, -1)).map((h) => (
                   <option key={h} value={h}>{formatoHoraAmPm(h)}</option>
                 ))}
               </select>

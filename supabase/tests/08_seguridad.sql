@@ -23,7 +23,7 @@ select prueba.debe_fallar('Desde la API no se puede cambiar la configuración',
 select prueba.debe_fallar('Desde la API no se pueden agregar festivos',
   $$insert into public.festivos values ('2026-10-20', 'Inventado')$$, '42501');
 select prueba.ok('Desde la API sí se leen festivos y configuración (para el formulario)',
-  (select count(*) > 0 from public.festivos) and (select count(*) = 4 from public.configuracion));
+  (select count(*) > 0 from public.festivos) and (select count(*) = 5 from public.configuracion));
 select prueba.debe_fallar('Las funciones internas no se pueden llamar desde la API',
   $$select privado.tipo_dia('2026-10-05')$$, '42501');
 

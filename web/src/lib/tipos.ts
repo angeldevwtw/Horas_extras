@@ -26,6 +26,7 @@ export type FilaFormato = Pick<Registro, 'identificacion' | 'nombre_completo' | 
 
 export interface Configuracion {
   finJornada: string;
+  finJornadaViernes: string;
   topeDiarioMin: number;
   topeFinSemanaMin: number;
   topeSemanalMin: number;

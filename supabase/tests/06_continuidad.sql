@@ -11,6 +11,13 @@ select prueba.debe_fallar('Día hábil de 5:30 PM a 6:30 PM se rechaza',
 select prueba.debe_fallar('Día hábil antes de la jornada (6:00 AM) se rechaza',
   $$select prueba.reg('6004', '2026-10-05', '06:00', '07:00')$$, 'HE_INICIO_JORNADA');
 
+select prueba.debe_funcionar('Viernes de 4:30 PM a 6:30 PM se acepta',
+  $$select prueba.reg('6007', '2026-10-02', '16:30', '18:30')$$);
+select prueba.debe_fallar('Viernes desde las 5:00 PM se rechaza (la jornada termina a las 4:30 PM)',
+  $$select prueba.reg('6008', '2026-10-02', '17:00', '18:00')$$, 'HE_INICIO_JORNADA');
+select prueba.debe_fallar('Viernes más de 2:00 se rechaza',
+  $$select prueba.reg('6009', '2026-10-02', '16:30', '18:45')$$, 'HE_TOPE_DIARIO');
+
 select prueba.como_postgres();
 update public.configuracion set valor = '18:00' where clave = 'fin_jornada';
 select prueba.anonimo();

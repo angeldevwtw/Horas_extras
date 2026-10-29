@@ -14,10 +14,11 @@ al pie la política y las líneas de firma.
 |---|---|
 | Solo niveles 68 (Analista - Ejecutivo), 73 (Asistentes) y 78 (Conductor) | `HE_NIVEL` |
 | Máximo 2 horas en día hábil | `HE_TOPE_DIARIO` |
-| Sábado, domingo o festivo: máximo 2 horas, a cualquier hora | `HE_TOPE_FIN_DE_SEMANA` |
+| Sábado o festivo: máximo 2 horas, a cualquier hora | `HE_TOPE_FIN_DE_SEMANA` |
+| Los domingos no se registran horas extras | `HE_DOMINGO` |
 | Máximo 12 horas por colega en la semana (lunes a domingo, aunque cruce de mes) | `HE_TOPE_SEMANAL` |
-| Un día de descanso del fin de semana: sábado y domingo seguidos no (sábado 31 y domingo 1 tampoco) | `HE_DESCANSO` |
-| Día hábil: inicio exactamente al terminar la jornada (5:00 PM), sin pausas | `HE_INICIO_JORNADA` |
+| Festivo solo si el colega no trabajó su sábado (lunes festivo: el sábado anterior; otro día: el sábado de esa semana), y al revés | `HE_DESCANSO` |
+| Día hábil: inicio exactamente al terminar la jornada (5:00 PM; viernes 4:30 PM), sin pausas | `HE_INICIO_JORNADA` |
 | Fecha del mes y año en curso (hora de Bogotá) | `HE_FECHA_FUERA_DEL_MES` |
 | Hora final posterior a la de inicio, sin pasar de medianoche | `HE_HORAS_INVALIDAS` |
 | Sin horarios cruzados el mismo día | `HE_SOLAPAMIENTO` |
@@ -117,10 +118,10 @@ Desde la página no se puede leer nada de lo guardado. En el panel de Supabase:
 
 ```bash
 npm install          # en la raíz, una sola vez
-npm run test:sql     # reglas y permisos en la base (95 pruebas)
+npm run test:sql     # reglas y permisos en la base (104 pruebas)
 
 cd web
-npm test             # minutos, tipo de día, formato H:MM y el Excel (32 pruebas)
+npm test             # minutos, tipo de día, formato H:MM y el Excel (34 pruebas)
 ```
 
 Las pruebas SQL levantan un Postgres en memoria (PGlite) con lo mínimo de Supabase
