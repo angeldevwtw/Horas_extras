@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { CalendarioMes } from '../componentes/CalendarioMes';
 import { ContadorSemana } from '../componentes/ContadorSemana';
+import { SelectorCargo } from '../componentes/SelectorCargo';
 import { Aviso, Boton, Campo, claseEntrada, Tarjeta } from '../componentes/ui';
 import { formatoFecha, NOMBRE_TIPO_DIA, tipoDia } from '../lib/fechas';
 import { formatoDuracion, formatoHoraAmPm, minutosEntre, opcionesDeHora } from '../lib/horas';
@@ -153,8 +154,8 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
           </Campo>
           <div className="grid gap-4 sm:grid-cols-2">
             <Campo etiqueta="Cargo" htmlFor="cargo" error={errorVisible('cargo')}>
-              <input id="cargo" value={datos.cargo} aria-invalid={!!errorVisible('cargo')}
-                onChange={(e) => cambiar('cargo', e.target.value)} className={claseEntrada} />
+              <SelectorCargo valor={datos.cargo} invalido={!!errorVisible('cargo')}
+                alCambiar={(cargo) => cambiar('cargo', cargo)} />
             </Campo>
             <Campo etiqueta="Nivel" htmlFor="nivel" error={errorVisible('nivel')}>
               <select id="nivel" value={datos.nivel ?? ''} aria-invalid={!!errorVisible('nivel')}
