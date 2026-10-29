@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { ColegasConMasHoras, HorasPorDia, HorasPorFilial } from '../componentes/Graficas';
 import { Aviso, Boton, Campo, claseEntrada, InsigniaEstado, Tarjeta } from '../componentes/ui';
 import { descargarFormato } from '../exportar/formatoServicesCentral';
 import { formatoFecha, NOMBRE_TIPO_DIA, nombreMes } from '../lib/fechas';
@@ -137,6 +138,22 @@ function PanelAdministracion({ mes, hoy, registros, aviso, alCambiarMes, alAnula
           </div>
         ))}
       </dl>
+
+      {vigentes.length > 0 && (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="lg:col-span-2">
+            <Tarjeta titulo="Horas por día" descripcion="Total de horas extras registradas cada día del mes.">
+              <HorasPorDia registros={vigentes} mes={mes} />
+            </Tarjeta>
+          </div>
+          <Tarjeta titulo="Horas por filial">
+            <HorasPorFilial registros={vigentes} />
+          </Tarjeta>
+          <Tarjeta titulo="Colegas con más horas" descripcion="Los 8 con más horas extras en el mes.">
+            <ColegasConMasHoras registros={vigentes} />
+          </Tarjeta>
+        </div>
+      )}
 
       {aviso && <Aviso tipo={aviso.tipo}>{aviso.texto}</Aviso>}
 
