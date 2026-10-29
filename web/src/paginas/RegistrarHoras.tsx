@@ -191,10 +191,20 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
         </Paso>
 
         <Paso numero={2} titulo="Fecha y horario" descripcion="Solo días del mes en curso.">
-          <Campo etiqueta="Fecha" error={errorVisible('fecha_horas_extras')}>
+          <Campo etiqueta="Fecha" error={diaLleno ? undefined : errorVisible('fecha_horas_extras')}>
             <CalendarioMes hoy={hoy} festivos={festivos} seleccionada={datos.fecha_horas_extras}
               alElegir={elegirFecha} />
           </Campo>
+          {diaLleno && (
+            <div role="alert" className="flex gap-3 rounded-lg border border-error bg-error-suave p-4 text-error">
+              <span aria-hidden className="grid size-6 shrink-0 place-items-center rounded-full bg-error
+                text-sm font-bold text-blanco">!</span>
+              <div>
+                <p className="font-semibold">Este día ya está registrado</p>
+                <p className="mt-1 text-sm">{errorDia.fecha_horas_extras} Elija otra fecha.</p>
+              </div>
+            </div>
+          )}
           <div className="grid gap-4 sm:grid-cols-2">
             <Campo etiqueta="Hora de inicio" htmlFor="inicio" error={errorVisible('hora_inicio')}
               ayuda={finJornada ? `Día hábil: inicia al terminar la jornada (${formatoHoraAmPm(finJornada)}).` : undefined}>
@@ -272,6 +282,11 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
         )}
 
         {resultado && <Aviso tipo={resultado.tipo}>{resultado.texto}</Aviso>}
+        {diaLleno && (
+          <p className="rounded-md bg-error-suave px-3 py-2 text-sm font-medium text-error">
+            Ese día ya está registrado para este colega.
+          </p>
+        )}
 
         <div className="grid gap-2">
           <Boton type="submit" className="py-2.5" disabled={hayErrores || revisando || guardando}>
