@@ -229,7 +229,7 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
           <Boton type="submit" disabled={hayErrores || revisando || guardando}>
             {guardando ? 'Guardando…' : revisando ? 'Revisando reglas…' : 'Guardar'}
           </Boton>
-          {hayErrores && tocados.size > 0 && (
+          {[...tocados].some((campo) => errores[campo]) && (
             <p className="text-sm text-texto-suave">Corrija los campos marcados para poder guardar.</p>
           )}
         </div>
