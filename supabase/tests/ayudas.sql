@@ -5,31 +5,26 @@ grant usage on schema prueba to anon, authenticated;
 create table prueba.resultados (
   n serial primary key, nombre text not null, ok boolean not null, detalle text
 );
-grant all on prueba.resultados to anon, authenticated;
+-- Las claves de anulación que entrega registrar_horas, como las guardaría el navegador.
+create table prueba.claves (id bigint primary key, clave uuid not null);
+grant all on prueba.resultados, prueba.claves to anon, authenticated;
 grant all on sequence prueba.resultados_n_seq to anon, authenticated;
-
-insert into auth.users (email)
-select email from public.usuarios
-union all select 'intruso@ejemplo.com';
 
 create function prueba.reloj(p_ahora text) returns void language sql as $$
   select set_config('prueba.ahora', p_ahora, false)
 $$;
 
--- Actúa como el usuario de Supabase Auth con ese correo, con el rol "authenticated".
-create function prueba.como(p_email text) returns void language plpgsql as $$
+-- Actúa como quien abre la app: sin sesión, con el rol "anon".
+create function prueba.anonimo() returns void language plpgsql as $$
 begin
   reset role;
-  perform set_config('request.jwt.claim.sub',
-    (select id::text from auth.users where email = p_email), false);
-  set role authenticated;
+  set role anon;
 end
 $$;
 
 create function prueba.como_postgres() returns void language plpgsql as $$
 begin
   reset role;
-  perform set_config('request.jwt.claim.sub', '', false);
 end
 $$;
 
@@ -38,8 +33,16 @@ create function prueba.reg(
   p_identificacion text, p_fecha date, p_inicio time, p_final time,
   p_nivel integer default 68, p_justificacion text default 'Cierre de proceso de prueba'
 ) returns bigint language sql as $$
-  select id from public.registrar_horas(p_identificacion, 'Colega ' || p_identificacion,
-    'Cargo de prueba', p_nivel, 'Filial A', p_fecha, p_inicio, p_final, p_justificacion)
+  insert into prueba.claves (id, clave)
+  select id, clave_anulacion from public.registrar_horas(p_identificacion,
+    'Colega ' || p_identificacion, 'Cargo de prueba', p_nivel, 'Filial A', p_fecha, p_inicio,
+    p_final, p_justificacion)
+  returning id
+$$;
+
+create function prueba.anular(p_id bigint, p_motivo text default 'Prueba de anulación')
+returns void language sql as $$
+  select public.anular_registro(p_id, (select clave from prueba.claves where id = p_id), p_motivo)
 $$;
 
 create function prueba.ok(p_nombre text, p_condicion boolean, p_detalle text default null)
@@ -61,7 +64,7 @@ exception when others then
 end
 $$;
 
--- p_esperado es el código de la regla (detail, ej. HE_TOPE_MENSUAL) o un SQLSTATE (ej. 42501).
+-- p_esperado es el código de la regla (detail, ej. HE_TOPE_SEMANAL) o un SQLSTATE (ej. 42501).
 create function prueba.debe_fallar(p_nombre text, p_sql text, p_esperado text) returns void
 language plpgsql as $$
 declare

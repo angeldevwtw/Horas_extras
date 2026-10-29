@@ -1,12 +1,12 @@
 # Horas Extras
 
-Aplicación web para registrar las horas extras de los colegas y descargar el formato en Excel
-que se adjunta al ticket de Services Central. Reemplaza el Excel diligenciado a mano: la base
-de datos no deja guardar un registro que incumpla las reglas, ni siquiera llamando a la API
-directamente.
+Página web para diligenciar las horas extras de los colegas y descargar el formato en Excel que
+se adjunta al ticket de Services Central. Reemplaza el Excel llenado a mano: la base de datos no
+deja guardar un registro que incumpla las reglas, ni siquiera llamando a la API directamente.
 
-La aprobación de jefe inmediato, VP y RRHH se sigue haciendo por fuera, en el ticket; el Excel
-lleva al pie la política y las líneas de firma.
+No tiene login: quien abre la página llena el formulario, guarda y descarga el Excel. La
+aprobación de jefe inmediato, VP y RRHH se sigue haciendo por fuera, en el ticket; el Excel lleva
+al pie la política y las líneas de firma.
 
 ## Reglas que valida la base
 
@@ -23,19 +23,28 @@ lleva al pie la política y las líneas de firma.
 | Sin horarios cruzados el mismo día | `HE_SOLAPAMIENTO` |
 | Justificación obligatoria | `HE_JUSTIFICACION` |
 
-Los topes y el fin de jornada se cambian en Administración → Configuración. Los registros no se
+Los topes cuentan todo lo registrado para el colega, desde cualquier equipo. Los registros no se
 editan ni se borran: se anulan con un motivo y las horas anuladas dejan de contar.
+
+## Cómo se usa
+
+1. Se diligencian los datos del colega y las horas; los errores salen junto a cada campo y el
+   botón Guardar no se activa mientras haya alguno.
+2. Cada registro guardado aparece en la lista "Registrado en esta ventana".
+3. "Descargar Excel" arma el formato con esa lista.
+
+La lista y las claves para anular viven solo en esa pestaña (se borran al cerrarla, para no dejar
+cédulas en el equipo). Un registro hecho desde otra pestaña ya no se puede anular desde la página;
+se anula en el panel de Supabase (ver abajo).
 
 ## Estructura
 
 ```
 23_Horas_Extras/
 ├─ supabase/
-│  ├─ migrations/      ← esquema, reglas, permisos (RLS) y festivos 2026-2027
+│  ├─ migrations/      ← esquema, reglas, permisos y festivos 2026-2027
 │  ├─ seed.sql         ← datos ficticios, solo para desarrollo local
 │  └─ tests/           ← pruebas SQL de cada regla (corren en PGlite, sin Docker)
-├─ scripts/
-│  └─ registrar_admin.sql
 └─ web/                ← React + TypeScript + Vite + Tailwind
    └─ src/theme/tema.css   ← único archivo con los colores de la marca
 ```
@@ -52,27 +61,10 @@ npx supabase link --project-ref jhvkmjurhktikzplspyp
 npx supabase db push
 ```
 
-`db push` aplica las migraciones; el `seed.sql` no se sube al proyecto real.
+`db push` aplica las migraciones; el `seed.sql` no se sube al proyecto real. La integración de
+Vercel con Supabase no crea las tablas, solo copia variables.
 
-### 2. Autenticación (panel de Supabase)
-
-1. **Authentication → Hooks → Before User Created**: activarlo con la función de Postgres
-   `public.hook_antes_de_crear_usuario`. Así solo se crean cuentas para correos que estén en la
-   tabla `usuarios` y activos.
-2. **Authentication → Email Templates**: en *Magic Link* (usuarios que ya entraron) y en
-   *Confirm signup* (primer ingreso) el correo debe mostrar el código. Poner `{{ .Token }}` en
-   el cuerpo, por ejemplo: `Su código para entrar es {{ .Token }}`.
-3. **Authentication → SMTP Settings**: configurar un SMTP propio. El de Supabase solo envía
-   unos pocos correos por hora y no sirve para uso real.
-4. **Authentication → URL Configuration**: poner en *Site URL* la dirección donde quede publicada
-   la app.
-
-### 3. Primer administrador
-
-Abrir `scripts/registrar_admin.sql` en el SQL Editor, poner el correo y el nombre y ejecutarlo.
-Con ese correo ya se entra, y los demás usuarios se agregan desde Administración.
-
-### 4. Frontend
+### 2. Frontend en local
 
 ```bash
 cd web
@@ -81,46 +73,51 @@ cp .env.example .env.local   # poner la URL y la clave publicable del proyecto
 npm run dev
 ```
 
-Solo van la URL y la clave publicable (anon). La `service_role` nunca va en el frontend.
+## Publicar el frontend (Vercel)
+
+- Carpeta base (Root Directory): `web`; Framework: Vite.
+- Variables: `SUPABASE_URL` y `SUPABASE_ANON_KEY` (las crea la integración de Supabase) o
+  `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`. `web/vite.config.ts` pasa al navegador solo
+  esas dos; la `service_role` nunca.
+- Settings → Deployment Protection: desactivar *Vercel Authentication* en producción, o la
+  página pedirá iniciar sesión en Vercel.
+
+## Administración (panel de Supabase)
+
+Desde la página no se puede leer nada de lo guardado. En el panel de Supabase:
+
+- **Table Editor → registros**: consultar lo registrado.
+- **Table Editor → festivos / configuracion**: agregar festivos o cambiar topes y fin de jornada.
+- **Anular un registro** (SQL Editor). Los registros no se borran ni se editan, ni siquiera desde
+  el panel; se anulan con:
+
+  ```sql
+  select privado.anular_registro_admin('HE-00001', 'Motivo de la anulación');
+  ```
 
 ## Pruebas
 
 ```bash
 npm install          # en la raíz, una sola vez
-npm run test:sql     # reglas, permisos y RLS en la base (85 pruebas)
+npm run test:sql     # reglas y permisos en la base (79 pruebas)
 
 cd web
-npm test             # cálculo de minutos, tipo de día, formato H:MM y el Excel (31 pruebas)
+npm test             # minutos, tipo de día, formato H:MM y el Excel (31 pruebas)
 ```
 
 Las pruebas SQL levantan un Postgres en memoria (PGlite) con lo mínimo de Supabase
 (`supabase/tests/entorno_supabase.sql`), aplican las migraciones y simulan la hora con
-`prueba.reloj()`. La hora simulada solo la acepta una conexión directa como `postgres`; desde
-la API siempre se usa la hora real de Bogotá.
+`prueba.reloj()`. La hora simulada solo la acepta una conexión directa como `postgres`; desde la
+API siempre se usa la hora real de Bogotá.
 
-Lo que no cubren: el hook dentro del servicio de Auth (se prueba la función, no el servicio) y
-dos registros simultáneos del mismo colega (PGlite tiene una sola conexión). Para lo segundo el
-trigger toma un `pg_advisory_xact_lock` por colega antes de sumar las horas.
-
-## Publicar el frontend
-
-Es un sitio estático. En Netlify, Vercel o Cloudflare Pages:
-
-- Carpeta base: `web`
-- Comando de compilación: `npm run build`
-- Carpeta publicada: `web/dist` (o `dist` si la carpeta base ya es `web`)
-- Variables de entorno: `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`, o `SUPABASE_URL` y
-  `SUPABASE_ANON_KEY`, que son las que crea la integración de Supabase en Vercel.
-  `web/vite.config.ts` pasa al navegador solo esas dos; la `service_role` nunca.
-
-La integración de Vercel con Supabase no crea las tablas; eso lo hace `npx supabase db push`.
-
-Después de publicar, actualizar la *Site URL* del paso 2.
+No cubren dos registros simultáneos del mismo colega (PGlite tiene una sola conexión); para eso
+el trigger toma un `pg_advisory_xact_lock` por colega antes de sumar las horas.
 
 ## Datos personales
 
-Las cédulas son datos personales (Ley 1581 de 2012):
+Las cédulas son datos personales (Ley 1581 de 2012). Como la página no tiene login:
 
-- Cada usuario ve solo los registros que hizo; el administrador ve todos.
-- Las búsquedas por cédula van por RPC (POST), así que no quedan en URLs ni en los logs de la API.
-- El archivo descargado se llama `horas-extras-AAAA-MM.xlsx`, sin datos del colega.
+- Desde la API no se pueden leer registros ni colegas; solo registrar, revisar reglas, ver el total
+  de horas de la semana de una cédula y anular con la clave que se entregó al registrar.
+- Cualquiera con la dirección puede registrar; conviene compartirla solo internamente.
+- El archivo descargado se llama `horas-extras-AAAA-MM-DD.xlsx`, sin datos del colega.

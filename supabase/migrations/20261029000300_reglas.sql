@@ -149,8 +149,8 @@ declare
   v_error record;
   -- Lo único que cambia al anular; las columnas generadas se excluyen porque en un trigger
   -- BEFORE todavía no están calculadas.
-  v_editables text[] := array['estado', 'anulado_por', 'fecha_anulacion', 'motivo_anulacion',
-                              'codigo', 'minutos_totales'];
+  v_editables text[] := array['estado', 'fecha_anulacion', 'motivo_anulacion', 'codigo',
+                              'minutos_totales'];
 begin
   if tg_op = 'UPDATE' then
     if current_setting('he.anulando', true) is distinct from 'si'
@@ -169,7 +169,6 @@ begin
 
   new.tipo_dia := privado.tipo_dia(new.fecha_horas_extras);
   new.estado := 'registrada';
-  new.anulado_por := null;
   new.fecha_anulacion := null;
   new.motivo_anulacion := null;
 

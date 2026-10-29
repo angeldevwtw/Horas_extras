@@ -1,6 +1,6 @@
 -- La fecha debe ser del mes y año en curso, y las horas deben tener sentido.
 select prueba.reloj('2026-10-15 08:00');
-select prueba.como('jefe.uno@ejemplo.com');
+select prueba.anonimo();
 
 select prueba.debe_funcionar('Primer día del mes en curso se acepta',
   $$select prueba.reg('7001', '2026-10-01', '17:00', '18:00')$$);

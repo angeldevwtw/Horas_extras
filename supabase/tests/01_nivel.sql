@@ -1,6 +1,6 @@
 -- Solo niveles 68, 73 y 78.
 select prueba.reloj('2026-10-01 08:00');
-select prueba.como('jefe.uno@ejemplo.com');
+select prueba.anonimo();
 
 select prueba.debe_funcionar('Nivel 68 (Analista - Ejecutivo) se registra',
   $$select prueba.reg('1001', '2026-10-05', '17:00', '18:00', 68)$$);

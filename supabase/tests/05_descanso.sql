@@ -1,6 +1,6 @@
 -- Un día de descanso del fin de semana, aunque caigan en meses distintos.
 select prueba.reloj('2026-10-01 08:00');
-select prueba.como('jefe.uno@ejemplo.com');
+select prueba.anonimo();
 
 select prueba.reg('5001', '2026-10-03', '08:00', '10:00');
 select prueba.debe_fallar('Con horas el sábado, el domingo se rechaza',
@@ -15,8 +15,9 @@ select prueba.debe_funcionar('Sábado y domingo de fines de semana distintos se 
 select prueba.debe_funcionar('Otro colega sí puede trabajar ese domingo',
   $$select prueba.reg('5003', '2026-10-04', '08:00', '10:00')$$);
 
-select public.anular_registro(
-  (select id from public.registros where identificacion = '5002'), 'Prueba de anulación');
+select prueba.como_postgres();
+select prueba.anular((select id from public.registros where identificacion = '5002'));
+select prueba.anonimo();
 select prueba.debe_funcionar('Al anular el domingo, el sábado queda permitido',
   $$select prueba.reg('5002', '2026-10-10', '08:00', '09:00')$$);
 

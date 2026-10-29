@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
-import { BuscadorColega, type ColegaEncontrado } from '../componentes/BuscadorColega';
 import { CalendarioMes } from '../componentes/CalendarioMes';
 import { ContadorSemana } from '../componentes/ContadorSemana';
 import { Aviso, Boton, Campo, claseEntrada, Tarjeta } from '../componentes/ui';
@@ -7,7 +6,7 @@ import { formatoFecha, NOMBRE_TIPO_DIA, tipoDia } from '../lib/fechas';
 import { formatoDuracion, formatoHoraAmPm, minutosEntre, opcionesDeHora } from '../lib/horas';
 import { erroresLocales, NIVELES, type Campo as NombreCampo, type DatosRegistro, type Errores } from '../lib/reglas';
 import { mensajeDeError, supabase } from '../lib/supabase';
-import type { Configuracion } from '../lib/tipos';
+import type { Configuracion, Registro } from '../lib/tipos';
 
 const VACIO: DatosRegistro = {
   identificacion: '', nombre_completo: '', cargo: '', nivel: null, filial: '',
@@ -16,8 +15,9 @@ const VACIO: DatosRegistro = {
 
 const HORAS = opcionesDeHora();
 
-export function RegistrarHoras({ hoy, config, festivos }: {
+export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
   hoy: string;
+  alRegistrar: (registro: Registro) => void;
   config: Configuracion;
   festivos: Map<string, string>;
 }) {
@@ -64,11 +64,6 @@ export function RegistrarHoras({ hoy, config, festivos }: {
     });
     setTocados((t) => new Set(t).add('fecha_horas_extras'));
     setResultado(null);
-  }
-
-  function elegirColega(colega: ColegaEncontrado) {
-    setDatos((d) => ({ ...d, ...colega }));
-    setTocados((t) => new Set([...t, 'identificacion', 'nombre_completo', 'cargo', 'nivel', 'filial']));
   }
 
   useEffect(() => {
@@ -129,13 +124,16 @@ export function RegistrarHoras({ hoy, config, festivos }: {
       setResultado({ tipo: 'error', texto: mensajeDeError(error) });
       return;
     }
+    alRegistrar({ ...data[0], estado: 'registrada' });
     setResultado({
       tipo: 'exito',
       texto: `Quedó registrado ${data[0].codigo}: ${datos.nombre_completo}, ${formatoFecha(datos.fecha_horas_extras)}, `
         + `${formatoHoraAmPm(datos.hora_inicio)} a ${formatoHoraAmPm(datos.hora_final)}.`,
     });
-    setDatos(VACIO);
-    setTocados(new Set());
+    // Se conservan los datos del colega, que suele tener varios días por registrar.
+    setDatos((d) => ({ ...VACIO, identificacion: d.identificacion, nombre_completo: d.nombre_completo,
+      cargo: d.cargo, nivel: d.nivel, filial: d.filial }));
+    setTocados(new Set(['identificacion', 'nombre_completo', 'cargo', 'nivel', 'filial']));
   }
 
   const errorVisible = (campo: NombreCampo) => (tocados.has(campo) ? errores[campo] : undefined);
@@ -144,8 +142,6 @@ export function RegistrarHoras({ hoy, config, festivos }: {
     <form onSubmit={guardar} className="grid gap-6 lg:grid-cols-2" noValidate>
       <Tarjeta titulo="Colega">
         <div className="flex flex-col gap-4">
-          <BuscadorColega alElegir={elegirColega} />
-          <p className="text-sm text-texto-suave">Si es la primera vez, diligencie los datos.</p>
           <Campo etiqueta="No. identificación" htmlFor="identificacion" error={errorVisible('identificacion')}>
             <input id="identificacion" value={datos.identificacion} inputMode="numeric"
               aria-invalid={!!errorVisible('identificacion')}

@@ -1,16 +1,10 @@
 import type { TipoDia } from './fechas';
 
-export interface Usuario {
-  id: string;
-  email: string;
-  nombre: string;
-  es_admin: boolean;
-  activo: boolean;
-}
-
+/** Lo que devuelve registrar_horas, más el estado que se lleva en esta ventana. */
 export interface Registro {
   id: number;
   codigo: string;
+  clave_anulacion: string;
   identificacion: string;
   nombre_completo: string;
   cargo: string;
@@ -23,7 +17,6 @@ export interface Registro {
   tipo_dia: TipoDia;
   justificacion: string;
   estado: 'registrada' | 'anulada';
-  motivo_anulacion: string | null;
 }
 
 export interface Configuracion {

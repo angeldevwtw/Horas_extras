@@ -1,16 +1,6 @@
 -- Las funciones internas viven en "privado", que la API de Supabase no expone.
 create schema if not exists privado;
 
-create table public.usuarios (
-  id uuid primary key default gen_random_uuid(),
-  auth_id uuid unique references auth.users (id) on delete set null,
-  email text not null unique check (email = lower(btrim(email)) and email like '_%@_%'),
-  nombre text not null check (btrim(nombre) <> ''),
-  es_admin boolean not null default false,
-  activo boolean not null default true,
-  created_at timestamptz not null default now()
-);
-
 create table public.colegas (
   id uuid primary key default gen_random_uuid(),
   identificacion text not null unique check (identificacion ~ '^[0-9A-Za-z]{3,20}$'),
@@ -53,13 +43,12 @@ create table public.registros (
   tipo_dia text not null check (tipo_dia in ('habil', 'sabado', 'domingo', 'festivo')),
   justificacion text not null check (btrim(justificacion) <> ''),
   estado text not null default 'registrada' check (estado in ('registrada', 'anulada')),
-  registrado_por uuid not null references public.usuarios (id),
+  -- No hay login: quien registra recibe una clave para poder anular. Aquí solo queda su hash.
+  clave_anulacion_hash text not null,
   created_at timestamptz not null default now(),
-  anulado_por uuid references public.usuarios (id),
   fecha_anulacion timestamptz,
   motivo_anulacion text
 );
 
 create index registros_colega_fecha on public.registros (colega_id, fecha_horas_extras)
   where estado = 'registrada';
-create index registros_registrado_por on public.registros (registrado_por);

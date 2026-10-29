@@ -18,7 +18,7 @@ const registro: Registro = {
   tipo_dia: 'habil',
   justificacion: 'Apoyo a cierre de prueba',
   estado: 'registrada',
-  motivo_anulacion: null,
+  clave_anulacion: '00000000-0000-0000-0000-000000000000',
 };
 
 it('arma el formato con el encabezado combinado, los formatos y el pie', async () => {

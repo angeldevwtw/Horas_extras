@@ -1,6 +1,6 @@
 -- Día hábil: las horas extras empiezan justo al terminar la jornada.
 select prueba.reloj('2026-10-01 08:00');
-select prueba.como('jefe.uno@ejemplo.com');
+select prueba.anonimo();
 
 select prueba.debe_funcionar('Día hábil de 5:00 PM a 7:00 PM se acepta',
   $$select prueba.reg('6001', '2026-10-05', '17:00', '19:00')$$);
@@ -13,7 +13,7 @@ select prueba.debe_fallar('Día hábil antes de la jornada (6:00 AM) se rechaza'
 
 select prueba.como_postgres();
 update public.configuracion set valor = '18:00' where clave = 'fin_jornada';
-select prueba.como('jefe.uno@ejemplo.com');
+select prueba.anonimo();
 select prueba.debe_funcionar('Con jornada hasta las 6:00 PM, iniciar a las 6:00 PM se acepta',
   $$select prueba.reg('6005', '2026-10-06', '18:00', '19:00')$$);
 select prueba.debe_fallar('Con jornada hasta las 6:00 PM, iniciar a las 5:00 PM se rechaza',
