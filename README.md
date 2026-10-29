@@ -23,6 +23,7 @@ al pie la política y las líneas de firma.
 | Hora final posterior a la de inicio, sin pasar de medianoche | `HE_HORAS_INVALIDAS` |
 | Día ya registrado: hábil con cualquier registro, sábado o festivo con las 2:00 completas | `HE_DIA_REGISTRADO` |
 | Sin horarios cruzados el mismo día | `HE_SOLAPAMIENTO` |
+| Horas en punto o y media (sin 15 ni 45 minutos) | restricción `registros_media_hora` |
 | Justificación obligatoria | `HE_JUSTIFICACION` |
 | Filial: Banco, Sufi, Leasing o Empleados | `HE_FILIAL` |
 
@@ -119,10 +120,10 @@ Desde la página no se puede leer nada de lo guardado. En el panel de Supabase:
 
 ```bash
 npm install          # en la raíz, una sola vez
-npm run test:sql     # reglas y permisos en la base (107 pruebas)
+npm run test:sql     # reglas y permisos en la base (110 pruebas)
 
 cd web
-npm test             # minutos, tipo de día, formato H:MM y el Excel (34 pruebas)
+npm test             # minutos, tipo de día, formato H:MM y el Excel (36 pruebas)
 ```
 
 Las pruebas SQL levantan un Postgres en memoria (PGlite) con lo mínimo de Supabase

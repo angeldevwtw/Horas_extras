@@ -27,7 +27,7 @@ export function horaDeMinutos(minutos: number): string {
 }
 
 /** Opciones de los desplegables de hora, de 00:00 a 23:45. */
-export function opcionesDeHora(pasoMinutos = 15): string[] {
+export function opcionesDeHora(pasoMinutos = 30): string[] {
   const opciones: string[] = [];
   for (let m = 0; m < 24 * 60; m += pasoMinutos) opciones.push(horaDeMinutos(m));
   return opciones;

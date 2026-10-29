@@ -26,9 +26,10 @@ describe('formatoHoraAmPm', () => {
     '%s → %s', (hora, esperado) => expect(formatoHoraAmPm(hora)).toBe(esperado));
 });
 
-it('opcionesDeHora cubre el día completo cada 15 minutos', () => {
+it('opcionesDeHora cubre el día completo cada media hora', () => {
   const opciones = opcionesDeHora();
-  expect(opciones).toHaveLength(96);
+  expect(opciones).toHaveLength(48);
   expect(opciones[0]).toBe('00:00');
-  expect(opciones.at(-1)).toBe('23:45');
+  expect(opciones[1]).toBe('00:30');
+  expect(opciones.at(-1)).toBe('23:30');
 });
