@@ -1,6 +1,6 @@
 import { diaDeSemana, diasDelMes, nombreMes, tipoDia } from '../lib/fechas';
 
-const DIAS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+const DIAS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
 /** Solo muestra los días del mes en curso; fines de semana y festivos van resaltados. */
 export function CalendarioMes({ hoy, festivos, seleccionada, alElegir }: {
@@ -11,8 +11,8 @@ export function CalendarioMes({ hoy, festivos, seleccionada, alElegir }: {
 }) {
   const dias = diasDelMes(hoy);
   const fechasFestivas = new Set(festivos.keys());
-  // Lunes = 0 para que la semana empiece en lunes.
-  const huecos = (diaDeSemana(dias[0]) + 6) % 7;
+  // La semana empieza en domingo, que es el 0 de diaDeSemana.
+  const huecos = diaDeSemana(dias[0]);
 
   return (
     <div>
