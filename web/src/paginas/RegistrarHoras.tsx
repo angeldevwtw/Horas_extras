@@ -26,7 +26,9 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
   const [tocados, setTocados] = useState<Set<NombreCampo>>(new Set());
   const [erroresServidor, setErroresServidor] = useState<Errores>({});
   const [revisando, setRevisando] = useState(false);
-  const [semana, setSemana] = useState<{ minutos: number; lunes: string; domingo: string } | null>(null);
+  const [semana, setSemana] = useState<{
+    minutos: number; lunes: string; domingo: string; minutosDia: number; codigosDia: string | null;
+  } | null>(null);
   const [guardando, setGuardando] = useState(false);
   const [resultado, setResultado] = useState<{ tipo: 'error' | 'exito'; texto: string } | null>(null);
 
@@ -38,7 +40,13 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
     ? Math.max(0, minutosEntre(datos.hora_inicio, datos.hora_final)) : 0;
 
   const erroresLocal = erroresLocales(datos, { hoy, festivos: fechasFestivas, ...config });
-  const errores: Errores = { ...erroresServidor, ...erroresLocal };
+  // Se avisa apenas se elige la fecha, sin esperar a que el resto del formulario esté lleno.
+  const diaLleno = semana && semana.minutosDia > 0 && (tipo === 'habil' || semana.minutosDia >= topeDia);
+  const errorDia: Errores = diaLleno ? {
+    fecha_horas_extras: `El colega ya tiene horas extras registradas el ${formatoFecha(datos.fecha_horas_extras)} `
+      + `(${semana.codigosDia}). Ese día no admite más.`,
+  } : {};
+  const errores: Errores = { ...erroresServidor, ...errorDia, ...erroresLocal };
   const hayErrores = Object.keys(errores).length > 0;
   const identificacionValida = !erroresLocal.identificacion;
 
@@ -76,7 +84,10 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
         p_identificacion: datos.identificacion, p_fecha: datos.fecha_horas_extras,
       });
       const fila = data?.[0];
-      if (fila) setSemana({ minutos: fila.minutos_semana, lunes: fila.lunes, domingo: fila.domingo });
+      if (fila) {
+        setSemana({ minutos: fila.minutos_semana, lunes: fila.lunes, domingo: fila.domingo,
+          minutosDia: fila.minutos_dia, codigosDia: fila.codigos_dia });
+      }
     }, 300);
     return () => clearTimeout(espera);
   }, [datos.identificacion, datos.fecha_horas_extras, identificacionValida]);

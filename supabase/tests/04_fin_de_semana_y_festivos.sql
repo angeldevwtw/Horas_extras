@@ -21,8 +21,8 @@ select prueba.debe_funcionar('Sábado: dos bloques que suman 2:00 se aceptan (pr
   $$select prueba.reg('4006', '2026-10-17', '08:00', '09:00')$$);
 select prueba.debe_funcionar('Sábado: dos bloques que suman 2:00 se aceptan (segundo)',
   $$select prueba.reg('4006', '2026-10-17', '14:00', '15:00')$$);
-select prueba.debe_fallar('Sábado: un tercer bloque supera las 2:00',
-  $$select prueba.reg('4006', '2026-10-17', '16:00', '16:30')$$, 'HE_TOPE_FIN_DE_SEMANA');
+select prueba.debe_fallar('Sábado con las 2:00 completas: un tercer bloque se rechaza',
+  $$select prueba.reg('4006', '2026-10-17', '16:00', '16:30')$$, 'HE_DIA_REGISTRADO');
 
 select prueba.reg('4007', '2026-10-24', '08:00', '09:00');
 select prueba.debe_fallar('Sábado: un bloque que se cruza con otro se rechaza',

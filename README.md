@@ -21,6 +21,7 @@ al pie la política y las líneas de firma.
 | Día hábil: inicio exactamente al terminar la jornada (5:00 PM; viernes 4:30 PM), sin pausas | `HE_INICIO_JORNADA` |
 | Fecha del mes y año en curso (hora de Bogotá) | `HE_FECHA_FUERA_DEL_MES` |
 | Hora final posterior a la de inicio, sin pasar de medianoche | `HE_HORAS_INVALIDAS` |
+| Día ya registrado: hábil con cualquier registro, sábado o festivo con las 2:00 completas | `HE_DIA_REGISTRADO` |
 | Sin horarios cruzados el mismo día | `HE_SOLAPAMIENTO` |
 | Justificación obligatoria | `HE_JUSTIFICACION` |
 | Filial: Banco, Sufi, Leasing o Empleados | `HE_FILIAL` |
@@ -118,7 +119,7 @@ Desde la página no se puede leer nada de lo guardado. En el panel de Supabase:
 
 ```bash
 npm install          # en la raíz, una sola vez
-npm run test:sql     # reglas y permisos en la base (104 pruebas)
+npm run test:sql     # reglas y permisos en la base (107 pruebas)
 
 cd web
 npm test             # minutos, tipo de día, formato H:MM y el Excel (34 pruebas)
