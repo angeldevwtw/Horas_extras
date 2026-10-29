@@ -68,8 +68,9 @@ export function App() {
             <span className="hidden rounded-full bg-suave px-3 py-1 text-xs font-medium text-primario first-letter:uppercase sm:inline">
               {nombreMes(hoy)}
             </span>
-            <a href={enAdmin ? '#' : '#admin'} className="font-medium text-primario hover:underline">
-              {enAdmin ? 'Volver al registro' : 'Administración'}
+            <a href={enAdmin ? '#' : '#admin'}
+              className="rounded-md bg-primario px-4 py-2 text-sm font-semibold text-blanco transition-colors hover:bg-primario-hover">
+              {enAdmin ? '← Volver al registro' : 'Administración'}
             </a>
           </nav>
         </div>
