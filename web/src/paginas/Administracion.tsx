@@ -16,7 +16,7 @@ async function llamar<T>(funcion: string, parametros: object): Promise<Respuesta
 }
 
 /** Con la clave de descarga: todos los registros del mes, el Excel y la anulación de cualquiera. */
-export function Administracion({ hoy }: { hoy: string }) {
+export function Administracion({ hoy, festivos }: { hoy: string; festivos: Set<string> }) {
   const [clave, setClave] = useState('');
   const [entrando, setEntrando] = useState(false);
   const [mes, setMes] = useState(hoy.slice(0, 7));
@@ -65,7 +65,7 @@ export function Administracion({ hoy }: { hoy: string }) {
   }
 
   return (
-    <PanelAdministracion mes={mes} hoy={hoy} registros={registros} aviso={aviso}
+    <PanelAdministracion mes={mes} hoy={hoy} festivos={festivos} registros={registros} aviso={aviso}
       alCambiarMes={async (nuevo) => { setMes(nuevo); setAviso(null); await cargar(clave, nuevo); }}
       alAnular={async (codigo, motivo) => {
         const respuesta = await llamar('anular_con_clave', { p_clave: clave, p_codigo: codigo, p_motivo: motivo });
@@ -78,9 +78,10 @@ export function Administracion({ hoy }: { hoy: string }) {
   );
 }
 
-function PanelAdministracion({ mes, hoy, registros, aviso, alCambiarMes, alAnular, alSalir }: {
+function PanelAdministracion({ mes, hoy, festivos, registros, aviso, alCambiarMes, alAnular, alSalir }: {
   mes: string;
   hoy: string;
+  festivos: Set<string>;
   registros: RegistroAdmin[];
   aviso: { tipo: 'error' | 'exito'; texto: string } | null;
   alCambiarMes: (mes: string) => Promise<void>;
@@ -142,8 +143,8 @@ function PanelAdministracion({ mes, hoy, registros, aviso, alCambiarMes, alAnula
       {vigentes.length > 0 && (
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="lg:col-span-2">
-            <Tarjeta titulo="Horas por día" descripcion="Total de horas extras registradas cada día del mes.">
-              <HorasPorDia registros={vigentes} mes={mes} />
+            <Tarjeta titulo="Horas por día" descripcion="Cuántas horas extras se registraron cada día. Pase el mouse por una barra para ver el detalle.">
+              <HorasPorDia registros={vigentes} mes={mes} festivos={festivos} />
             </Tarjeta>
           </div>
           <Tarjeta titulo="Horas por filial">

@@ -30,59 +30,105 @@ function sumarPor(registros: RegistroAdmin[], clave: (r: RegistroAdmin) => strin
   return totales;
 }
 
-/** Horas de cada día del mes; los domingos quedan vacíos porque no se registran. */
-export function HorasPorDia({ registros, mes }: { registros: RegistroAdmin[]; mes: string }) {
+/** Horas de cada día del mes, con sábados y festivos sombreados y el valor encima de cada barra. */
+export function HorasPorDia({ registros, mes, festivos }: {
+  registros: RegistroAdmin[];
+  mes: string;
+  festivos: Set<string>;
+}) {
   const porDia = sumarPor(registros, (r) => r.fecha_horas_extras);
   const dias = diasDelMes(`${mes}-01`);
-  const mayor = Math.max(0, ...[...porDia.values()].map((t) => t.minutos));
-  // El eje llega a la hora entera siguiente, con al menos 2:00, para que las barras no toquen el techo.
-  const techo = Math.max(120, Math.ceil(mayor / 60) * 60);
-  const lineas = [techo, techo / 2, 0];
+  const conHoras = [...porDia.entries()].filter(([fecha]) => fecha.startsWith(mes));
+  const totalMes = conHoras.reduce((suma, [, t]) => suma + t.minutos, 0);
+  const pico = conHoras.reduce<[string, { minutos: number }] | null>(
+    (mayor, actual) => (!mayor || actual[1].minutos > mayor[1].minutos ? actual : mayor), null);
+  // El eje llega a la hora entera siguiente, con al menos 2:00, y deja espacio para el valor encima.
+  const techo = Math.max(120, Math.ceil(((pico?.[1].minutos ?? 0) + 30) / 60) * 60);
+  const lineas = Array.from({ length: techo / 60 + 1 }, (_, i) => techo - i * 60);
+
+  const datos = [
+    ['Día con más horas', pico ? `${nombreCorto(pico[0])} · ${formatoDuracion(pico[1].minutos)} h` : '—'],
+    ['Días con horas extras', `${conHoras.length} de ${dias.filter((d) => diaDeSemana(d) !== 0).length}`],
+    ['Promedio por día con horas', conHoras.length ? `${formatoDuracion(Math.round(totalMes / conHoras.length))} h` : '—'],
+  ];
 
   return (
-    <figure>
+    <figure className="grid gap-5">
       <figcaption className="sr-only">Horas extras por día del mes</figcaption>
-      <div className="flex gap-2">
-        <div aria-hidden className="flex h-48 flex-col justify-between text-right text-xs text-texto-suave">
-          {lineas.map((m) => <span key={m} className="-my-2 leading-4">{formatoDuracion(m)}</span>)}
-        </div>
-        <div className="relative h-48 flex-1">
-          <div aria-hidden className="absolute inset-0 flex flex-col justify-between">
-            {lineas.map((m) => <div key={m} className="border-t border-borde" />)}
+      <dl className="grid gap-3 sm:grid-cols-3">
+        {datos.map(([nombre, valor]) => (
+          <div key={nombre} className="rounded-lg bg-fondo px-4 py-3">
+            <dt className="text-xs text-texto-suave">{nombre}</dt>
+            <dd className="mt-0.5 text-base font-semibold">{valor}</dd>
           </div>
-          <div className="relative flex h-full items-end gap-0.5">
+        ))}
+      </dl>
+
+      <div>
+        <div className="flex gap-2">
+          <div aria-hidden className="flex h-56 w-9 shrink-0 flex-col justify-between text-right text-xs text-texto-suave">
+            {lineas.map((m) => <span key={m} className="-my-2 leading-4">{formatoDuracion(m)}</span>)}
+          </div>
+          <div className="relative h-56 flex-1">
+            <div aria-hidden className="absolute inset-0 flex flex-col justify-between">
+              {lineas.map((m) => <div key={m} className={`border-t ${m ? 'border-dashed' : ''} border-borde`} />)}
+            </div>
+            <div className="relative flex h-full items-end gap-0.5">
+              {dias.map((fecha) => {
+                const total = porDia.get(fecha);
+                const especial = diaDeSemana(fecha) === 6 || festivos.has(fecha);
+                return (
+                  <div key={fecha} tabIndex={total ? 0 : -1}
+                    aria-label={total ? `${nombreCorto(fecha)}: ${formatoDuracion(total.minutos)} horas` : undefined}
+                    className={`group relative flex h-full flex-1 flex-col items-center justify-end rounded-t-sm
+                      ${especial ? 'bg-seleccion' : ''}`}>
+                    {total && (
+                      <>
+                        <span className="mb-1 text-[11px] font-semibold leading-none">{formatoDuracion(total.minutos)}</span>
+                        <div className="w-full max-w-6 rounded-t bg-primario group-hover:bg-secundario"
+                          style={{ height: `${(total.minutos / techo) * 100}%` }} />
+                        <Detalle>
+                          <strong>{nombreCorto(fecha)}</strong> · {formatoDuracion(total.minutos)} h
+                          · {registrosTexto(total.registros)}
+                        </Detalle>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+        <div aria-hidden className="mt-1.5 flex gap-2">
+          <span className="w-9 shrink-0" />
+          <div className="flex flex-1 gap-0.5 text-center text-[11px] leading-tight text-texto-suave">
             {dias.map((fecha) => {
-              const total = porDia.get(fecha);
-              const nombreDia = DIAS[diaDeSemana(fecha)];
+              const dia = diaDeSemana(fecha);
               return (
-                <div key={fecha} tabIndex={total ? 0 : -1}
-                  aria-label={total ? `${nombreDia} ${formatoFecha(fecha)}: ${formatoDuracion(total.minutos)} horas` : undefined}
-                  className="group relative flex h-full flex-1 items-end justify-center rounded-sm hover:bg-fondo focus-visible:bg-fondo">
-                  {total && (
-                    <>
-                      <div className="w-full max-w-5 rounded-t bg-primario group-hover:bg-secundario"
-                        style={{ height: `${(total.minutos / techo) * 100}%` }} />
-                      <Detalle>
-                        <strong>{nombreDia} {formatoFecha(fecha).slice(0, 5)}</strong> · {formatoDuracion(total.minutos)} h
-                        · {registrosTexto(total.registros)}
-                      </Detalle>
-                    </>
-                  )}
-                </div>
+                <span key={fecha} className={`flex-1 ${dia === 0 ? 'opacity-50' : ''}`}>
+                  <span className="block font-medium text-texto">{Number(fecha.slice(8))}</span>
+                  {DIAS[dia][0]}
+                </span>
               );
             })}
           </div>
         </div>
       </div>
-      <div aria-hidden className="ml-10 mt-1 flex gap-0.5 text-center text-xs text-texto-suave">
-        {dias.map((fecha) => {
-          const dia = Number(fecha.slice(8));
-          return <span key={fecha} className="flex-1">{dia === 1 || dia % 5 === 0 ? dia : ''}</span>;
-        })}
-      </div>
+
+      <ul className="flex flex-wrap gap-x-5 gap-y-1 text-xs text-texto-suave">
+        <li className="flex items-center gap-2">
+          <span aria-hidden className="size-3 rounded-sm bg-primario" />Horas extras del día
+        </li>
+        <li className="flex items-center gap-2">
+          <span aria-hidden className="size-3 rounded-sm bg-seleccion ring-1 ring-inset ring-borde" />Sábado o festivo
+        </li>
+        <li>Los domingos no se registran.</li>
+      </ul>
     </figure>
   );
 }
+
+const nombreCorto = (fecha: string) => `${DIAS[diaDeSemana(fecha)]} ${formatoFecha(fecha).slice(0, 5)}`;
 
 function BarrasHorizontales({ titulo, filas }: {
   titulo: string;

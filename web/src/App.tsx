@@ -77,7 +77,7 @@ export function App() {
       </header>
 
       <main className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-8">
-        {enAdmin ? <Administracion hoy={hoy} /> : (
+        {enAdmin ? <Administracion hoy={hoy} festivos={new Set(datosBase?.festivos.keys())} /> : (
           <>
             <div>
               <h1 className="text-2xl font-semibold tracking-tight">Registrar horas extras</h1>
