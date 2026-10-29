@@ -5,7 +5,7 @@ import { SelectorCargo } from '../componentes/SelectorCargo';
 import { Aviso, Boton, Campo, claseEntrada, Tarjeta } from '../componentes/ui';
 import { formatoFecha, NOMBRE_TIPO_DIA, tipoDia } from '../lib/fechas';
 import { formatoDuracion, formatoHoraAmPm, minutosEntre, opcionesDeHora } from '../lib/horas';
-import { erroresLocales, FILIALES, finJornadaDe, NIVELES, type Campo as NombreCampo, type DatosRegistro, type Errores } from '../lib/reglas';
+import { erroresLocales, FILIALES, finJornadaDe, NIVELES, nombrePropio, type Campo as NombreCampo, type DatosRegistro, type Errores } from '../lib/reglas';
 import { mensajeDeError, supabase } from '../lib/supabase';
 import type { Configuracion, Registro } from '../lib/tipos';
 
@@ -162,7 +162,7 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
           </Campo>
           <Campo etiqueta="Nombre y apellidos" htmlFor="nombre" error={errorVisible('nombre_completo')}>
             <input id="nombre" value={datos.nombre_completo} aria-invalid={!!errorVisible('nombre_completo')}
-              onChange={(e) => cambiar('nombre_completo', e.target.value)} className={claseEntrada} />
+              onChange={(e) => cambiar('nombre_completo', nombrePropio(e.target.value))} className={claseEntrada} />
           </Campo>
           <div className="grid gap-4 sm:grid-cols-2">
             <Campo etiqueta="Cargo" htmlFor="cargo" error={errorVisible('cargo')}>

@@ -22,6 +22,12 @@ export const CARGOS = [
 
 export const FILIALES = ['Banco', 'Sufi', 'Leasing', 'Empleados'] as const;
 
+/** "angel francisco ramos CASTILLO" -> "Angel Francisco Ramos Castillo". */
+export function nombrePropio(texto: string): string {
+  return texto.toLocaleLowerCase('es')
+    .replace(/(^|[\s'-])(\p{L})/gu, (_, antes: string, letra: string) => antes + letra.toLocaleUpperCase('es'));
+}
+
 export type Campo = 'identificacion' | 'nombre_completo' | 'cargo' | 'nivel' | 'filial'
   | 'fecha_horas_extras' | 'hora_inicio' | 'hora_final' | 'justificacion';
 

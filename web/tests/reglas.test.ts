@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { erroresLocales, type DatosRegistro, type Reglas } from '../src/lib/reglas';
+import { erroresLocales, nombrePropio, type DatosRegistro, type Reglas } from '../src/lib/reglas';
 
 const reglas: Reglas = {
   hoy: '2026-10-15',
@@ -69,5 +69,17 @@ describe('erroresLocales', () => {
   });
   it('la justificación es obligatoria', () => {
     expect(errores({ justificacion: '  ' }).justificacion).toBeDefined();
+  });
+});
+
+describe('nombrePropio', () => {
+  it('deja cada palabra con la primera letra en mayúscula', () => {
+    expect(nombrePropio('angel ramos')).toBe('Angel Ramos');
+    expect(nombrePropio('angel francisco ramos Castillo')).toBe('Angel Francisco Ramos Castillo');
+    expect(nombrePropio('MARÍA ÁLVAREZ')).toBe('María Álvarez');
+  });
+
+  it('respeta los espacios mientras se escribe', () => {
+    expect(nombrePropio('angel ')).toBe('Angel ');
   });
 });
