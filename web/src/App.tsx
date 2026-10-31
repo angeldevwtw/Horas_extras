@@ -64,7 +64,7 @@ export function App() {
             </span>
             <div className="leading-tight">
               <p className="text-sm font-semibold">Horas extras</p>
-              <p className="text-xs text-texto-suave">WTW Colombia</p>
+              <p className="text-xs text-texto-suave">Cuenta Bancolombia</p>
             </div>
           </div>
           <nav className="flex items-center gap-3 text-sm">
