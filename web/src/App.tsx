@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Guia } from './componentes/Guia';
 import { Aviso } from './componentes/ui';
 import { hoyBogota, nombreMes } from './lib/fechas';
-import { formatoDuracion, formatoHoraAmPm } from './lib/horas';
+import { formatoHoraAmPm } from './lib/horas';
 import { guardarRegistros, leerRegistros } from './lib/registrosDeLaVentana';
 import { mensajeDeError, supabase } from './lib/supabase';
 import type { Configuracion, Festivo, Registro } from './lib/tipos';
@@ -113,9 +113,11 @@ export function App() {
   );
 }
 
+const enHoras = (minutos: number) => `${(minutos / 60).toLocaleString('es-CO')} horas`;
+
 function ReglasEnBreve({ config }: { config: Configuracion }) {
   const reglas = [
-    `Máximo ${formatoDuracion(config.topeDiarioMin)} por día y ${formatoDuracion(config.topeSemanalMin)} por semana`,
+    `Máximo ${enHoras(config.topeDiarioMin)} por día y ${enHoras(config.topeSemanalMin)} por semana`,
     `Lunes a jueves desde las ${formatoHoraAmPm(config.finJornada)}; viernes desde las ${formatoHoraAmPm(config.finJornadaViernes)}`,
     'Festivos solo si no se trabajó el sábado; domingos no',
   ];

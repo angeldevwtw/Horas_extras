@@ -38,3 +38,75 @@
     @apply outline-2 outline-offset-2 outline-primario;
   }
 }
+
+/* Desplegables. Sin capa a propósito: así el espacio para la flecha le gana a "px-3".
+   Navegadores sin "base-select" (Firefox, Safari) usan la flecha de fondo;
+   Chrome y Edge dibujan también la lista abierta con los colores de la página. */
+select {
+  appearance: none;
+  padding-right: 2.5rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%235c5c66' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 7.5 5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+  cursor: pointer;
+}
+select:disabled {
+  cursor: not-allowed;
+}
+
+@supports (appearance: base-select) {
+  select,
+  ::picker(select) {
+    appearance: base-select;
+  }
+  select {
+    padding-right: 0.75rem;
+    background-image: none;
+    gap: 0.5rem;
+  }
+  select::picker-icon {
+    content: "";
+    margin-left: auto;
+    width: 1rem;
+    height: 1rem;
+    background-color: var(--color-texto-suave);
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m5 7.5 5 5 5-5'/%3E%3C/svg%3E") center / contain no-repeat;
+    transition: rotate 150ms ease-out;
+  }
+  select:open::picker-icon {
+    rotate: 180deg;
+  }
+  ::picker(select) {
+    margin-block: 0.25rem;
+    max-height: 18rem;
+    padding: 0.25rem;
+    border: 1px solid var(--color-borde);
+    border-radius: 0.5rem;
+    background: var(--color-blanco);
+    box-shadow: 0 8px 24px rgb(28 28 33 / 0.12);
+    overflow-y: auto;
+  }
+  option {
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    cursor: pointer;
+  }
+  option:hover,
+  option:focus-visible {
+    background: var(--color-suave);
+    outline: none;
+  }
+  option:checked {
+    background: var(--color-seleccion);
+    color: var(--color-primario);
+    font-weight: 600;
+  }
+  option::checkmark {
+    color: var(--color-primario);
+  }
+  option[value=""] {
+    color: var(--color-texto-suave);
+  }
+}
