@@ -37,12 +37,12 @@ select prueba.debe_fallar('Si un día no cumple no se guarda ninguno',
 select prueba.ok('Tras el rechazo el colega no tiene registros', prueba.cuantos('1403') = 0);
 
 select prueba.debe_fallar('El error dice qué día falló',
-  $$select prueba.varios('1404', '[{"fecha": "2026-11-08", "inicio": "08:00", "final": "09:00"}]')$$,
-  'HE_DOMINGO');
+  $$select prueba.varios('1404', '[{"fecha": "2026-11-10", "inicio": "18:00", "final": "19:00"}]')$$,
+  'HE_INICIO_JORNADA');
 select prueba.ok('revisar_varios indica el día del error',
-  (select mensaje like 'Los domingos%' and fecha = '2026-11-08'
+  (select mensaje like 'Ese día la jornada%' and fecha = '2026-11-10'
    from public.revisar_varios('1404', 68,
-     '[{"fecha": "2026-11-08", "inicio": "08:00", "final": "09:00"}]', 'Motivo')));
+     '[{"fecha": "2026-11-10", "inicio": "18:00", "final": "19:00"}]', 'Motivo')));
 
 select prueba.debe_fallar('Un día repetido se rechaza',
   $$select prueba.varios('1405', '[

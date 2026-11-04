@@ -71,9 +71,10 @@ describe('erroresLocales', () => {
     expect(errores({ ...viernes, hora_inicio: '16:30', hora_final: '18:30' })).toEqual({});
     expect(errores({ ...viernes, hora_inicio: '17:00', hora_final: '18:00' }).hora_inicio).toMatch(/4:30 PM/);
   });
-  it('los domingos no se registran', () => {
-    expect(errores({ fecha_horas_extras: '2026-10-11', hora_inicio: '08:00', hora_final: '09:00' })
-      .fecha_horas_extras).toMatch(/domingos/);
+  it('el domingo se registra como el sábado, a cualquier hora y hasta 2:00', () => {
+    const domingo = { fecha_horas_extras: '2026-10-11' };
+    expect(errores({ ...domingo, hora_inicio: '08:00', hora_final: '10:00' })).toEqual({});
+    expect(errores({ ...domingo, hora_inicio: '08:00', hora_final: '10:30' }).hora_final).toMatch(/fin de semana/);
   });
   it('la justificación es obligatoria', () => {
     expect(errores({ justificacion: '  ' }).justificacion).toBeDefined();

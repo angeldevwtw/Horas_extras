@@ -119,7 +119,7 @@ function ReglasEnBreve({ config }: { config: Configuracion }) {
   const reglas = [
     `Máximo ${enHoras(config.topeDiarioMin)} por día y ${enHoras(config.topeSemanalMin)} por semana`,
     `Lunes a jueves desde las ${formatoHoraAmPm(config.finJornada)}; viernes desde las ${formatoHoraAmPm(config.finJornadaViernes)}`,
-    'Festivos solo si no se trabajó el sábado; domingos no',
+    'Sábado o domingo, no los dos; festivo solo si no se trabajó ese fin de semana',
   ];
   return (
     <ul className="mt-3 flex flex-wrap gap-2 text-xs text-texto-suave">

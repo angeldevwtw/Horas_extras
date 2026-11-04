@@ -23,10 +23,10 @@ export function pasosGuiaRegistro(config: Configuracion): PasoGuia[] {
       texto: (
         <>
           <p>Marque uno o varios días del mes anterior o del mes en curso; un segundo clic lo desmarca y
-            arriba del calendario se cambia de mes. Los sábados y festivos están sombreados y los domingos
-            tachados: no se registran.</p>
-          <p>Los días que el colega ya tiene registrados salen en rojo y no se pueden marcar. Un festivo
-            solo se permite si el colega no trabajó su sábado.</p>
+            arriba del calendario se cambia de mes. Los fines de semana y festivos están sombreados.</p>
+          <p>Los días que el colega ya tiene registrados salen en rojo y no se pueden marcar. En un fin de
+            semana se registra el sábado o, si el colega descansa el sábado, el domingo; nunca los dos. Un
+            festivo solo se permite si el colega no trabajó ese fin de semana.</p>
         </>
       ),
     },
@@ -38,8 +38,8 @@ export function pasosGuiaRegistro(config: Configuracion): PasoGuia[] {
           <p>Los días marcados se agrupan por semana (lunes a domingo). En cada semana elija las horas por
             día y se aplican a los días de esa semana. De lunes a jueves empiezan a
             las {formatoHoraAmPm(config.finJornada)} y los viernes a
-            las {formatoHoraAmPm(config.finJornadaViernes)}, justo al terminar la jornada; en sábado o
-            festivo se elige la hora de inicio.</p>
+            las {formatoHoraAmPm(config.finJornadaViernes)}, justo al terminar la jornada; en fin de
+            semana o festivo se elige la hora de inicio.</p>
           <p>En la lista de días puede ajustar el horario de cualquiera o quitarlo. Las horas van en punto o
             y media, con máximo {formatoDuracion(config.topeDiarioMin)} por día.</p>
         </>

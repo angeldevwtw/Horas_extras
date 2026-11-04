@@ -1,12 +1,8 @@
--- Domingos no se registran. Un festivo solo si el colega no trabajó su sábado (lunes festivo:
--- el sábado anterior; festivo de otro día: el sábado de esa semana), y al revés.
+-- Un festivo solo si el colega no trabajó su sábado (lunes festivo: el sábado anterior;
+-- festivo de otro día: el sábado de esa semana), y al revés. El domingo, en
+-- 16_domingo_si_descansa_sabado.sql.
 select prueba.reloj('2026-10-01 08:00');
 select prueba.anonimo();
-
-select prueba.debe_fallar('Un domingo no se puede registrar',
-  $$select prueba.reg('5000', '2026-10-04', '08:00', '09:00')$$, 'HE_DOMINGO');
-select prueba.debe_fallar('Ningún domingo se puede registrar, a ninguna hora',
-  $$select prueba.reg('5000', '2026-10-11', '17:00', '18:00')$$, 'HE_DOMINGO');
 
 select prueba.reg('5001', '2026-10-10', '08:00', '10:00');
 select prueba.debe_fallar('Con horas el sábado, el lunes festivo siguiente se rechaza',

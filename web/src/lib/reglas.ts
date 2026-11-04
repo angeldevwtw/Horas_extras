@@ -64,7 +64,7 @@ export function finJornadaDe(fecha: string, reglas: Pick<Reglas, 'finJornada' | 
   return diaDeSemana(fecha) === 5 ? reglas.finJornadaViernes : reglas.finJornada;
 }
 
-/** Tope de horas extras de ese día: hábil o sábado/festivo. */
+/** Tope de horas extras de ese día: hábil o fin de semana/festivo. */
 export function topeDelDia(fecha: string, reglas: Pick<Reglas, 'festivos' | 'topeDiarioMin' | 'topeFinSemanaMin'>): number {
   return tipoDia(fecha, reglas.festivos) === 'habil' ? reglas.topeDiarioMin : reglas.topeFinSemanaMin;
 }
@@ -100,10 +100,6 @@ export function erroresDia(datos: DiaRegistro, reglas: Reglas): Errores {
   if (!mismoMes(datos.fecha_horas_extras, anterior) && !mismoMes(datos.fecha_horas_extras, actual)) {
     errores.fecha_horas_extras = `La fecha debe ser de ${nombreMes(anterior)} o de ${nombreMes(actual)}.`;
   }
-  if (diaDeSemana(datos.fecha_horas_extras) === 0) {
-    errores.fecha_horas_extras = 'Los domingos no se pueden registrar horas extras.';
-    return errores;
-  }
 
   if (!datos.hora_inicio || !datos.hora_final) {
     errores.hora_final = 'Seleccione la hora de inicio y la hora final.';
@@ -124,7 +120,7 @@ export function erroresDia(datos: DiaRegistro, reglas: Reglas): Errores {
       errores.hora_final = `Máximo ${formatoDuracion(reglas.topeDiarioMin)} horas en día hábil.`;
     }
   } else if (minutos > reglas.topeFinSemanaMin) {
-    errores.hora_final = `Máximo ${formatoDuracion(reglas.topeFinSemanaMin)} horas en sábado o festivo.`;
+    errores.hora_final = `Máximo ${formatoDuracion(reglas.topeFinSemanaMin)} horas en fin de semana o festivo.`;
   }
   return errores;
 }

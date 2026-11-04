@@ -48,7 +48,7 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
   const duraciones = Array.from({ length: Math.max(config.topeDiarioMin, config.topeFinSemanaMin) / 30 },
     (_, i) => (i + 1) * 30);
 
-  // Hábil: lleno con cualquier registro; sábado o festivo, con el tope completo.
+  // Hábil: lleno con cualquier registro; fin de semana o festivo, con el tope completo.
   const llenos = useMemo(() => {
     const mapa = new Map<string, string>();
     for (const [fecha, r] of registrados) {

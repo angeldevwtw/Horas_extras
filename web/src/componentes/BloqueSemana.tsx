@@ -7,7 +7,7 @@ import { Campo, claseEntrada } from './ui';
 export interface HorarioSemana {
   /** Minutos por día; 0 si no se ha elegido. */
   duracion: number;
-  /** Hora de inicio en sábado o festivo; los hábiles empiezan al terminar la jornada. */
+  /** Hora de inicio en fin de semana o festivo; los hábiles empiezan al terminar la jornada. */
   inicio: string;
 }
 
@@ -63,7 +63,7 @@ export function BloqueSemana({ lunes, dias, horario, duraciones, topeSemanalMin,
           </select>
         </Campo>
         {hayEspeciales && (
-          <Campo etiqueta="Inicio en sábado o festivo" htmlFor={`${id}-inicio`}>
+          <Campo etiqueta="Inicio en fin de semana o festivo" htmlFor={`${id}-inicio`}>
             <select id={`${id}-inicio`} value={horario.inicio} className={claseEntrada}
               onChange={(e) => alCambiarHorario({ ...horario, inicio: e.target.value })}>
               <option value="">Seleccione…</option>

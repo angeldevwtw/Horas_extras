@@ -30,7 +30,7 @@ function sumarPor(registros: RegistroAdmin[], clave: (r: RegistroAdmin) => strin
   return totales;
 }
 
-/** Horas de cada día del mes, con sábados y festivos sombreados y el valor encima de cada barra. */
+/** Horas de cada día del mes, con fines de semana y festivos sombreados y el valor encima de cada barra. */
 export function HorasPorDia({ registros, mes, festivos }: {
   registros: RegistroAdmin[];
   mes: string;
@@ -76,7 +76,7 @@ export function HorasPorDia({ registros, mes, festivos }: {
             <div className="relative flex h-full items-end gap-0.5">
               {dias.map((fecha) => {
                 const total = porDia.get(fecha);
-                const especial = diaDeSemana(fecha) === 6 || festivos.has(fecha);
+                const especial = diaDeSemana(fecha) % 6 === 0 || festivos.has(fecha);
                 return (
                   <div key={fecha} tabIndex={total ? 0 : -1}
                     aria-label={total ? `${nombreCorto(fecha)}: ${formatoDuracion(total.minutos)} horas` : undefined}
@@ -120,9 +120,8 @@ export function HorasPorDia({ registros, mes, festivos }: {
           <span aria-hidden className="size-3 rounded-sm bg-primario" />Horas extras del día
         </li>
         <li className="flex items-center gap-2">
-          <span aria-hidden className="size-3 rounded-sm bg-seleccion ring-1 ring-inset ring-borde" />Sábado o festivo
+          <span aria-hidden className="size-3 rounded-sm bg-seleccion ring-1 ring-inset ring-borde" />Fin de semana o festivo
         </li>
-        <li>Los domingos no se registran.</li>
       </ul>
     </figure>
   );

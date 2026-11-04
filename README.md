@@ -14,10 +14,10 @@ al pie la política y las líneas de firma.
 |---|---|
 | Solo niveles 68 (Analista - Ejecutivo), 73 (Asistentes) y 78 (Conductor) | `HE_NIVEL` |
 | Máximo 2 horas en día hábil | `HE_TOPE_DIARIO` |
-| Sábado o festivo: máximo 2 horas, a cualquier hora | `HE_TOPE_FIN_DE_SEMANA` |
-| Los domingos no se registran horas extras | `HE_DOMINGO` |
+| Sábado, domingo o festivo: máximo 2 horas, a cualquier hora | `HE_TOPE_FIN_DE_SEMANA` |
+| En un fin de semana, el sábado o (si el colega descansa el sábado) el domingo, nunca los dos | `HE_DESCANSO` |
 | Máximo 12 horas por colega en la semana (lunes a domingo, aunque cruce de mes) | `HE_TOPE_SEMANAL` |
-| Festivo solo si el colega no trabajó su sábado (lunes festivo: el sábado anterior; otro día: el sábado de esa semana), y al revés | `HE_DESCANSO` |
+| Festivo solo si el colega no trabajó ese fin de semana, ni sábado ni domingo (lunes festivo: el anterior; otro día: el de esa semana), y al revés | `HE_DESCANSO` |
 | Día hábil: inicio exactamente al terminar la jornada (5:00 PM; viernes 4:30 PM), sin pausas | `HE_INICIO_JORNADA` |
 | Fecha del mes anterior o del mes en curso (hora de Bogotá) | `HE_FECHA_FUERA_DEL_MES` |
 | Hora final posterior a la de inicio, sin pasar de medianoche | `HE_HORAS_INVALIDAS` |
@@ -29,7 +29,7 @@ al pie la política y las líneas de firma.
 
 Se pueden registrar varios días a la vez para un mismo colega (`registrar_varios`): cada día
 pasa por las mismas reglas, el tope semanal suma también los otros días elegidos, un festivo no
-puede ir con su sábado en la misma selección y se guardan todos o ninguno. La justificación
+puede ir con su sábado o domingo en la misma selección, ni el sábado con el domingo y se guardan todos o ninguno. La justificación
 puede ser una para todos los días o una por día. Cada día queda como un
 registro con su propio código.
 

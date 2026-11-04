@@ -16,7 +16,7 @@ select prueba.debe_funcionar('La semana siguiente vuelve a empezar de cero',
 select prueba.ok('El resumen de la semana siguiente solo cuenta sus días',
   (select minutos_semana = 120 from public.resumen_colega('3001', '2026-10-14')));
 
--- Con los topes por defecto (2:00 diarias, domingo sin horas) no se puede pasar de 12:00, así
+-- Con los topes por defecto (2:00 diarias, sábado o domingo, no los dos) no se pasa de 12:00, así
 -- que se baja el tope semanal a 10:00 para probar el rechazo.
 select prueba.como_postgres();
 update public.configuracion set valor = '600' where clave = 'tope_semanal_min';

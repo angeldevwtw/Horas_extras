@@ -6,7 +6,7 @@ import { claseEntrada } from './ui';
 const HORAS = opcionesDeHora();
 const DIAS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
-/** Un renglón por día elegido; en día hábil la hora de inicio es fija, en sábado o festivo se elige. */
+/** Un renglón por día elegido; en día hábil la hora de inicio es fija, en fin de semana o festivo se elige. */
 export function ListaDias({ dias, festivos, finJornadaDe, topeDe, errores, alCambiar, alQuitar }: {
   dias: DiaRegistro[];
   festivos: Map<string, string>;
