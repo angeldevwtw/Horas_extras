@@ -48,7 +48,13 @@ export function pasosGuiaRegistro(config: Configuracion): PasoGuia[] {
     {
       objetivo: 'motivo',
       titulo: '4. La justificación',
-      texto: <p>Explique la causa concreta de las horas extras. Las razones genéricas o permanentes no sirven.</p>,
+      texto: (
+        <>
+          <p>Explique la causa concreta de las horas extras. Las razones genéricas o permanentes no sirven.</p>
+          <p>Con varios días marcados puede usar <strong>la misma para todos</strong> o escribir{' '}
+            <strong>una por día</strong>.</p>
+        </>
+      ),
     },
     {
       objetivo: 'resumen',

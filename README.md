@@ -29,7 +29,8 @@ al pie la política y las líneas de firma.
 
 Se pueden registrar varios días a la vez para un mismo colega (`registrar_varios`): cada día
 pasa por las mismas reglas, el tope semanal suma también los otros días elegidos, un festivo no
-puede ir con su sábado en la misma selección y se guardan todos o ninguno. Cada día queda como un
+puede ir con su sábado en la misma selección y se guardan todos o ninguno. La justificación
+puede ser una para todos los días o una por día. Cada día queda como un
 registro con su propio código.
 
 Los topes cuentan todo lo registrado para el colega, desde cualquier equipo. Los registros no se

@@ -4,7 +4,7 @@ import { CalendarioMes } from '../componentes/CalendarioMes';
 import { ContadorSemana } from '../componentes/ContadorSemana';
 import { SelectorCargo } from '../componentes/SelectorCargo';
 import { Aviso, Boton, Campo, claseEntrada, Paso } from '../componentes/ui';
-import { diasDelMes, formatoFecha, lunesDe, mesesPermitidos, sumarDias, tipoDia } from '../lib/fechas';
+import { diaDeSemana, diasDelMes, formatoFecha, lunesDe, mesesPermitidos, sumarDias, tipoDia } from '../lib/fechas';
 import { formatoDuracion, formatoHoraAmPm, horaDeMinutos, minutosDelDia, minutosEntre } from '../lib/horas';
 import { erroresColega, erroresDia, FILIALES, finJornadaDe, NIVELES, nombrePropio, topeDelDia, type Campo as NombreCampo, type DatosColega, type DiaRegistro, type Errores } from '../lib/reglas';
 import { mensajeDeError, supabase } from '../lib/supabase';
@@ -14,7 +14,7 @@ const VACIO: DatosColega = {
   identificacion: '', nombre_completo: '', cargo: '', nivel: null, filial: '', justificacion: '',
 };
 
-const aParametro = (d: DiaRegistro) => ({ fecha: d.fecha_horas_extras, inicio: d.hora_inicio, final: d.hora_final });
+const DIAS_SEMANA = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
 export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
   hoy: string;
@@ -27,6 +27,9 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
   // Horario común de cada semana (por su lunes): se aplica a cada día al marcarlo y a todos
   // los de la semana al cambiarlo.
   const [horarios, setHorarios] = useState<Record<string, HorarioSemana>>({});
+  // Con varios días: una justificación para todos o una por día.
+  const [modoJustificacion, setModoJustificacion] = useState<'general' | 'dia'>('general');
+  const [justificaciones, setJustificaciones] = useState<Record<string, string>>({});
   const [tocados, setTocados] = useState<Set<NombreCampo>>(new Set());
   const [erroresServidor, setErroresServidor] = useState<{ colega: Errores; dias: Record<string, Errores> }>(
     { colega: {}, dias: {} });
@@ -55,7 +58,14 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
     return mapa;
   }, [registrados, fechasFestivas, config.topeFinSemanaMin]);
 
+  const porDia = dias.length > 1 && modoJustificacion === 'dia';
   const locColega = erroresColega(datos);
+  if (porDia) delete locColega.justificacion;
+  const aParametro = (d: DiaRegistro) => ({
+    fecha: d.fecha_horas_extras, inicio: d.hora_inicio, final: d.hora_final,
+    ...(porDia ? { justificacion: justificaciones[d.fecha_horas_extras] ?? '' } : {}),
+  });
+  const faltaJustificacion = (fecha: string) => porDia && !(justificaciones[fecha] ?? '').trim();
   const erroresDelColega: Errores = { ...erroresServidor.colega, ...locColega };
   const erroresPorDia: Record<string, Errores> = {};
   for (const d of dias) {
@@ -68,11 +78,15 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
       ...erroresServidor.dias[fecha],
       ...(lleno ? { fecha_horas_extras: `El colega ya tiene horas extras registradas este día (${lleno}). Quítelo de la selección.` } : {}),
       ...locales,
+      ...(faltaJustificacion(fecha) ? { justificacion: 'Escriba la justificación de este día.' } : {}),
     };
   }
-  const diasConError = dias.filter((d) => Object.keys(erroresPorDia[d.fecha_horas_extras]).length > 0).length;
+  const diasConError = dias.filter((d) => Object.keys(erroresPorDia[d.fecha_horas_extras])
+    .some((campo) => campo !== 'justificacion' || !faltaJustificacion(d.fecha_horas_extras))).length;
+  const sinJustificacion = dias.filter((d) => faltaJustificacion(d.fecha_horas_extras)).length;
   const sinHorario = dias.filter((d) => !d.hora_inicio || !d.hora_final).length;
   const hayErrores = Object.keys(erroresDelColega).length > 0 || diasConError > 0 || sinHorario > 0
+    || sinJustificacion > 0
     || dias.length === 0;
   const identificacionValida = !locColega.identificacion;
   const totalMinutos = dias.reduce((s, d) => s + minutosDe(d), 0);
@@ -137,7 +151,7 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
 
   // Las reglas que dependen de otros registros (tope semanal, descanso, cruces) las revisa la base.
   const listoParaRevisar = dias.length > 0 && sinHorario === 0 && Object.keys(locColega).length === 0
-    && dias.every((d) => Object.keys(erroresDia(d, reglas)).length === 0);
+    && dias.every((d) => Object.keys(erroresDia(d, reglas)).length === 0 && !faltaJustificacion(d.fecha_horas_extras));
   useEffect(() => {
     setErroresServidor({ colega: {}, dias: {} });
     if (!listoParaRevisar) return;
@@ -160,7 +174,7 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
       setRevisando(false);
     }, 400);
     return () => { clearTimeout(espera); setRevisando(false); };
-  }, [datos, dias, listoParaRevisar]);
+  }, [datos, dias, listoParaRevisar, porDia, justificaciones]);
 
   async function guardar(e: FormEvent) {
     e.preventDefault();
@@ -193,8 +207,19 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
     // Se conservan los datos del colega por si tiene más días por registrar.
     setDatos((d) => ({ ...d, justificacion: '' }));
     setDias([]);
+    setJustificaciones({});
     setTocados(new Set(['identificacion', 'nombre_completo', 'cargo', 'nivel', 'filial']));
     setVersion((v) => v + 1);
+  }
+
+  function elegirModoJustificacion(modo: 'general' | 'dia') {
+    // Al pasar a una por día, cada día arranca con lo que ya se había escrito en la general.
+    if (modo === 'dia') {
+      setJustificaciones((j) => Object.fromEntries(dias.map((d) =>
+        [d.fecha_horas_extras, j[d.fecha_horas_extras] ?? datos.justificacion])));
+    }
+    setModoJustificacion(modo);
+    setResultado(null);
   }
 
   const errorVisible = (campo: NombreCampo) => (tocados.has(campo) ? erroresDelColega[campo] : undefined);
@@ -286,12 +311,45 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
             técnicas, entregas urgentes o ausencias imprevistas del personal), evitando razones
             genéricas o permanentes.
           </p>
-          <Campo etiqueta="Justificación" htmlFor="justificacion" error={errorVisible('justificacion')}
-            ayuda={dias.length > 1 ? 'Se usa la misma justificación para todos los días.' : undefined}>
-            <textarea id="justificacion" rows={4} value={datos.justificacion}
-              aria-invalid={!!errorVisible('justificacion')} aria-describedby="nota-justificacion"
-              onChange={(e) => cambiar('justificacion', e.target.value)} className={claseEntrada} />
-          </Campo>
+          {dias.length > 1 && (
+            <div role="group" aria-label="Justificación" className="inline-flex w-fit rounded-lg bg-suave p-1">
+              {([['general', 'La misma para todos'], ['dia', 'Una por día']] as const).map(([modo, texto]) => (
+                <button key={modo} type="button" onClick={() => elegirModoJustificacion(modo)}
+                  aria-pressed={modoJustificacion === modo}
+                  className={`rounded-md px-3 py-1.5 text-sm font-semibold transition-colors
+                    ${modoJustificacion === modo ? 'bg-primario text-blanco' : 'text-texto-suave hover:text-texto'}`}>
+                  {texto}
+                </button>
+              ))}
+            </div>
+          )}
+          {porDia ? (
+            <div className="grid gap-4">
+              {dias.map((d) => {
+                const fecha = d.fecha_horas_extras;
+                const id = `justificacion-${fecha}`;
+                const error = erroresPorDia[fecha]?.justificacion;
+                return (
+                  <Campo key={fecha} etiqueta={`${DIAS_SEMANA[diaDeSemana(fecha)]} ${formatoFecha(fecha)}`}
+                    htmlFor={id} error={error}>
+                    <textarea id={id} rows={2} value={justificaciones[fecha] ?? ''} aria-invalid={!!error}
+                      aria-describedby="nota-justificacion" className={claseEntrada}
+                      onChange={(e) => {
+                        setJustificaciones((j) => ({ ...j, [fecha]: e.target.value }));
+                        setResultado(null);
+                      }} />
+                  </Campo>
+                );
+              })}
+            </div>
+          ) : (
+            <Campo etiqueta="Justificación" htmlFor="justificacion" error={errorVisible('justificacion')}
+              ayuda={dias.length > 1 ? 'Se usa la misma justificación para todos los días.' : undefined}>
+              <textarea id="justificacion" rows={4} value={datos.justificacion}
+                aria-invalid={!!errorVisible('justificacion')} aria-describedby="nota-justificacion"
+                onChange={(e) => cambiar('justificacion', e.target.value)} className={claseEntrada} />
+            </Campo>
+          )}
         </Paso>
       </div>
 
@@ -342,6 +400,10 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
           ) : sinHorario > 0 ? (
             <p className="text-center text-xs text-texto-suave">
               Falta el horario de {sinHorario === 1 ? 'un día' : `${sinHorario} días`}.
+            </p>
+          ) : sinJustificacion > 0 ? (
+            <p className="text-center text-xs text-texto-suave">
+              Falta la justificación de {sinJustificacion === 1 ? 'un día' : `${sinJustificacion} días`}.
             </p>
           ) : [...tocados].some((campo) => erroresDelColega[campo]) && (
             <p className="text-center text-xs text-texto-suave">Corrija los campos marcados para poder guardar.</p>
