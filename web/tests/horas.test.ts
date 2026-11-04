@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatoDuracion, formatoHoraAmPm, minutosEntre, opcionesDeHora } from '../src/lib/horas';
+import { formatoDuracion, formatoHoraAmPm, formatoHorasDecimal, formatoTotalHoras, minutosEntre, opcionesDeHora } from '../src/lib/horas';
 
 describe('minutosEntre', () => {
   it('calcula la duración en minutos', () => {
@@ -13,6 +13,16 @@ describe('minutosEntre', () => {
     expect(minutosEntre('23:00', '01:00')).toBeLessThan(0);
     expect(minutosEntre('17:00', '17:00')).toBe(0);
   });
+});
+
+describe('formatoHorasDecimal', () => {
+  it.each([[120, '2'], [90, '1.5'], [6120, '102'], [97, '1.6']])(
+    '%i minutos → %s', (minutos, esperado) => expect(formatoHorasDecimal(minutos)).toBe(esperado));
+});
+
+describe('formatoTotalHoras', () => {
+  it.each([[0, '0 horas'], [30, '0.5 horas'], [60, '1 hora'], [9900, '165 horas'], [9930, '165.5 horas']])(
+    '%i minutos → %s', (minutos, esperado) => expect(formatoTotalHoras(minutos)).toBe(esperado));
 });
 
 describe('formatoDuracion (H:MM)', () => {

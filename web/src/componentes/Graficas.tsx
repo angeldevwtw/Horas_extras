@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { diaDeSemana, diasDelMes, formatoFecha } from '../lib/fechas';
-import { formatoDuracion } from '../lib/horas';
+import { formatoHorasDecimal, formatoTotalHoras } from '../lib/horas';
 import { FILIALES } from '../lib/reglas';
 import type { RegistroAdmin } from '../lib/tipos';
 
@@ -42,14 +42,14 @@ export function HorasPorDia({ registros, mes, festivos }: {
   const totalMes = conHoras.reduce((suma, [, t]) => suma + t.minutos, 0);
   const pico = conHoras.reduce<[string, { minutos: number }] | null>(
     (mayor, actual) => (!mayor || actual[1].minutos > mayor[1].minutos ? actual : mayor), null);
-  // El eje llega a la hora entera siguiente, con al menos 2:00, y deja espacio para el valor encima.
+  // El eje llega a la hora entera siguiente, con al menos 2 horas, y deja espacio para el valor encima.
   const techo = Math.max(120, Math.ceil(((pico?.[1].minutos ?? 0) + 30) / 60) * 60);
   const lineas = Array.from({ length: techo / 60 + 1 }, (_, i) => techo - i * 60);
 
   const datos = [
-    ['Día con más horas', pico ? `${nombreCorto(pico[0])} · ${formatoDuracion(pico[1].minutos)} h` : '—'],
-    ['Días con horas extras', `${conHoras.length} de ${dias.filter((d) => diaDeSemana(d) !== 0).length}`],
-    ['Promedio por día con horas', conHoras.length ? `${formatoDuracion(Math.round(totalMes / conHoras.length))} h` : '—'],
+    ['Día con más horas', pico ? `${nombreCorto(pico[0])} · ${formatoHorasDecimal(pico[1].minutos)} h` : '—'],
+    ['Días con horas extras', `${conHoras.length} de ${dias.length}`],
+    ['Promedio por día con horas', conHoras.length ? `${formatoHorasDecimal(Math.round(totalMes / conHoras.length))} h` : '—'],
   ];
 
   return (
@@ -67,7 +67,7 @@ export function HorasPorDia({ registros, mes, festivos }: {
       <div>
         <div className="flex gap-2">
           <div aria-hidden className="flex h-56 w-9 shrink-0 flex-col justify-between text-right text-xs text-texto-suave">
-            {lineas.map((m) => <span key={m} className="-my-2 leading-4">{formatoDuracion(m)}</span>)}
+            {lineas.map((m) => <span key={m} className="-my-2 leading-4">{formatoHorasDecimal(m)}</span>)}
           </div>
           <div className="relative h-56 flex-1">
             <div aria-hidden className="absolute inset-0 flex flex-col justify-between">
@@ -79,16 +79,16 @@ export function HorasPorDia({ registros, mes, festivos }: {
                 const especial = diaDeSemana(fecha) % 6 === 0 || festivos.has(fecha);
                 return (
                   <div key={fecha} tabIndex={total ? 0 : -1}
-                    aria-label={total ? `${nombreCorto(fecha)}: ${formatoDuracion(total.minutos)} horas` : undefined}
+                    aria-label={total ? `${nombreCorto(fecha)}: ${formatoTotalHoras(total.minutos)}` : undefined}
                     className={`group relative flex h-full flex-1 flex-col items-center justify-end rounded-t-sm
                       ${especial ? 'bg-seleccion' : ''}`}>
                     {total && (
                       <>
-                        <span className="mb-1 text-[11px] font-semibold leading-none">{formatoDuracion(total.minutos)}</span>
+                        <span className="mb-1 text-[11px] font-semibold leading-none">{formatoHorasDecimal(total.minutos)}</span>
                         <div className="w-full max-w-6 rounded-t bg-primario group-hover:bg-secundario"
                           style={{ height: `${(total.minutos / techo) * 100}%` }} />
                         <Detalle>
-                          <strong>{nombreCorto(fecha)}</strong> · {formatoDuracion(total.minutos)} h
+                          <strong>{nombreCorto(fecha)}</strong> · {formatoHorasDecimal(total.minutos)} h
                           · {registrosTexto(total.registros)}
                         </Detalle>
                       </>
@@ -103,11 +103,10 @@ export function HorasPorDia({ registros, mes, festivos }: {
           <span className="w-9 shrink-0" />
           <div className="flex flex-1 gap-0.5 text-center text-[11px] leading-tight text-texto-suave">
             {dias.map((fecha) => {
-              const dia = diaDeSemana(fecha);
               return (
-                <span key={fecha} className={`flex-1 ${dia === 0 ? 'opacity-50' : ''}`}>
+                <span key={fecha} className="flex-1">
                   <span className="block font-medium text-texto">{Number(fecha.slice(8))}</span>
-                  {DIAS[dia][0]}
+                  {DIAS[diaDeSemana(fecha)][0]}
                 </span>
               );
             })}
@@ -163,7 +162,7 @@ function BarrasHorizontales({ titulo, filas, total, conPosicion = false }: {
                   {f.detalle && <span className="ml-1.5 text-xs font-normal text-texto-suave">{f.detalle}</span>}
                 </span>
                 <span className="shrink-0 text-sm">
-                  <span className="font-semibold">{formatoDuracion(f.minutos)} h</span>
+                  <span className="font-semibold">{formatoHorasDecimal(f.minutos)} h</span>
                   <span className="ml-1.5 text-xs text-texto-suave">{porcentaje(f.minutos, total)} %</span>
                 </span>
               </div>
@@ -174,7 +173,7 @@ function BarrasHorizontales({ titulo, filas, total, conPosicion = false }: {
               <span className="text-xs text-texto-suave">{registrosTexto(f.registros)}</span>
             </div>
             <Detalle>
-              <strong>{f.nombre}</strong> · {formatoDuracion(f.minutos)} h · {porcentaje(f.minutos, total)} % del mes
+              <strong>{f.nombre}</strong> · {formatoHorasDecimal(f.minutos)} h · {porcentaje(f.minutos, total)} % del mes
             </Detalle>
           </li>
         ))}
@@ -219,7 +218,7 @@ export function ColegasConMasHoras({ registros, cuantos = 8 }: { registros: Regi
     <div className="grid gap-5">
       <Titular>
         <strong>{filas[0].nombre}</strong> lleva más horas en el mes:{' '}
-        <strong className="text-primario">{formatoDuracion(filas[0].minutos)} h</strong>.
+        <strong className="text-primario">{formatoHorasDecimal(filas[0].minutos)} h</strong>.
       </Titular>
       <BarrasHorizontales titulo="Colegas con más horas extras" filas={filas} conPosicion
         total={registros.reduce((suma, r) => suma + r.minutos_totales, 0)} />

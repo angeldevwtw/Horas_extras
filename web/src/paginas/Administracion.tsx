@@ -3,7 +3,7 @@ import { ColegasConMasHoras, HorasPorDia, HorasPorFilial } from '../componentes/
 import { Aviso, Boton, Campo, claseEntrada, InsigniaEstado, Tarjeta } from '../componentes/ui';
 import { descargarFormato } from '../exportar/formatoServicesCentral';
 import { formatoFecha, NOMBRE_TIPO_DIA, nombreMes } from '../lib/fechas';
-import { formatoDuracion, formatoHoraAmPm } from '../lib/horas';
+import { formatoDuracion, formatoHoraAmPm, formatoTotalHoras } from '../lib/horas';
 import { mensajeDeError, supabase } from '../lib/supabase';
 import type { RegistroAdmin } from '../lib/tipos';
 
@@ -130,7 +130,7 @@ function PanelAdministracion({ mes, hoy, festivos, registros, aviso, alCambiarMe
       <dl className="grid gap-4 sm:grid-cols-3">
         {[
           ['Registros vigentes', String(vigentes.length)],
-          ['Horas extras del mes', formatoDuracion(minutosVigentes)],
+          ['Horas extras del mes', formatoTotalHoras(minutosVigentes)],
           ['Anulados', String(registros.length - vigentes.length)],
         ].map(([nombre, valor]) => (
           <div key={nombre} className="rounded-xl border border-borde bg-blanco p-5 shadow-xs">

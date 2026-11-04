@@ -14,6 +14,16 @@ export function formatoDuracion(minutos: number): string {
   return `${Math.floor(minutos / 60)}:${String(minutos % 60).padStart(2, '0')}`;
 }
 
+/** Horas con un decimal como máximo (ej. 9900 → "165", 9930 → "165.5"). */
+export function formatoHorasDecimal(minutos: number): string {
+  return String(Math.round(minutos / 6) / 10);
+}
+
+/** Total con su unidad (ej. 9900 → "165 horas", 60 → "1 hora"). */
+export function formatoTotalHoras(minutos: number): string {
+  return `${formatoHorasDecimal(minutos)} ${minutos === 60 ? 'hora' : 'horas'}`;
+}
+
 /** Hora del día como h:mm AM/PM (ej. "17:00" → "5:00 PM"). */
 export function formatoHoraAmPm(hora: string): string {
   const minutos = minutosDelDia(hora);
