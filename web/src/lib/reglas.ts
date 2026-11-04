@@ -33,17 +33,22 @@ export type Campo = 'identificacion' | 'nombre_completo' | 'cargo' | 'nivel' | '
 
 export type Errores = Partial<Record<Campo, string>>;
 
-export interface DatosRegistro {
+export interface DatosColega {
   identificacion: string;
   nombre_completo: string;
   cargo: string;
   nivel: number | null;
   filial: string;
+  justificacion: string;
+}
+
+export interface DiaRegistro {
   fecha_horas_extras: string;
   hora_inicio: string;
   hora_final: string;
-  justificacion: string;
 }
+
+export type DatosRegistro = DatosColega & DiaRegistro;
 
 export interface Reglas {
   hoy: string;
@@ -59,7 +64,16 @@ export function finJornadaDe(fecha: string, reglas: Pick<Reglas, 'finJornada' | 
   return diaDeSemana(fecha) === 5 ? reglas.finJornadaViernes : reglas.finJornada;
 }
 
+/** Tope de horas extras de ese día: hábil o sábado/festivo. */
+export function topeDelDia(fecha: string, reglas: Pick<Reglas, 'festivos' | 'topeDiarioMin' | 'topeFinSemanaMin'>): number {
+  return tipoDia(fecha, reglas.festivos) === 'habil' ? reglas.topeDiarioMin : reglas.topeFinSemanaMin;
+}
+
 export function erroresLocales(datos: DatosRegistro, reglas: Reglas): Errores {
+  return { ...erroresColega(datos), ...erroresDia(datos, reglas) };
+}
+
+export function erroresColega(datos: DatosColega): Errores {
   const errores: Errores = {};
 
   if (!/^[0-9A-Za-z]{3,20}$/.test(datos.identificacion.trim())) {
@@ -72,6 +86,11 @@ export function erroresLocales(datos: DatosRegistro, reglas: Reglas): Errores {
     errores.nivel = 'Solo niveles 68, 73 o 78.';
   }
   if (!datos.justificacion.trim()) errores.justificacion = 'La justificación es obligatoria.';
+  return errores;
+}
+
+export function erroresDia(datos: DiaRegistro, reglas: Reglas): Errores {
+  const errores: Errores = {};
 
   if (!datos.fecha_horas_extras) {
     errores.fecha_horas_extras = 'La fecha es obligatoria.';

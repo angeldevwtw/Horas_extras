@@ -19,14 +19,14 @@ export function pasosGuiaRegistro(config: Configuracion): PasoGuia[] {
     },
     {
       objetivo: 'fecha',
-      titulo: '2. La fecha',
+      titulo: '2. Los días',
       texto: (
         <>
-          <p>Se pueden elegir días del mes anterior o del mes en curso; arriba del calendario se cambia de
-            mes. Los sábados y festivos están sombreados y los
-            domingos tachados: no se registran.</p>
-          <p>Un festivo solo se permite si el colega no trabajó su sábado. Si el colega ya tiene horas ese
-            día, aparece un aviso en rojo.</p>
+          <p>Marque uno o varios días del mes anterior o del mes en curso; un segundo clic lo desmarca y
+            arriba del calendario se cambia de mes. Los sábados y festivos están sombreados y los domingos
+            tachados: no se registran.</p>
+          <p>Los días que el colega ya tiene registrados salen en rojo y no se pueden marcar. Un festivo
+            solo se permite si el colega no trabajó su sábado.</p>
         </>
       ),
     },
@@ -35,9 +35,12 @@ export function pasosGuiaRegistro(config: Configuracion): PasoGuia[] {
       titulo: '3. El horario',
       texto: (
         <>
-          <p>De lunes a jueves las horas empiezan a las {formatoHoraAmPm(config.finJornada)} y los viernes a
-            las {formatoHoraAmPm(config.finJornadaViernes)}, justo al terminar la jornada.</p>
-          <p>Las horas van en punto o y media, con máximo {formatoDuracion(config.topeDiarioMin)} por día.</p>
+          <p>Elija las horas por día y se aplican a todos los días marcados. De lunes a jueves empiezan a
+            las {formatoHoraAmPm(config.finJornada)} y los viernes a
+            las {formatoHoraAmPm(config.finJornadaViernes)}, justo al terminar la jornada; en sábado o
+            festivo se elige la hora de inicio.</p>
+          <p>En la lista de días puede ajustar el horario de cualquiera o quitarlo. Las horas van en punto o
+            y media, con máximo {formatoDuracion(config.topeDiarioMin)} por día.</p>
         </>
       ),
     },
@@ -51,9 +54,10 @@ export function pasosGuiaRegistro(config: Configuracion): PasoGuia[] {
       titulo: '5. Revisar y guardar',
       texto: (
         <>
-          <p>Aquí ve el total del registro y cuánto lleva el colega en la semana (máximo{' '}
-            {formatoDuracion(config.topeSemanalMin)} horas).</p>
-          <p>El botón <strong>Guardar registro</strong> solo se activa cuando todo cumple las reglas.</p>
+          <p>Aquí ve el total de la selección y cuánto lleva el colega en cada semana (máximo{' '}
+            {formatoDuracion(config.topeSemanalMin)} horas), contando los días marcados.</p>
+          <p>El botón para guardar solo se activa cuando todos los días cumplen las reglas. Se guardan
+            todos juntos o ninguno, y cada día queda como un registro con su propio código.</p>
         </>
       ),
     },

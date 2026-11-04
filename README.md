@@ -27,13 +27,19 @@ al pie la política y las líneas de firma.
 | Justificación obligatoria | `HE_JUSTIFICACION` |
 | Filial: Banco, Sufi, Leasing o Empleados | `HE_FILIAL` |
 
+Se pueden registrar varios días a la vez para un mismo colega (`registrar_varios`): cada día
+pasa por las mismas reglas, el tope semanal suma también los otros días elegidos, un festivo no
+puede ir con su sábado en la misma selección y se guardan todos o ninguno. Cada día queda como un
+registro con su propio código.
+
 Los topes cuentan todo lo registrado para el colega, desde cualquier equipo. Los registros no se
 editan ni se borran: se anulan con un motivo y las horas anuladas dejan de contar.
 
 ## Cómo se usa
 
-1. Se diligencian los datos del colega y las horas; los errores salen junto a cada campo y el
-   botón Guardar no se activa mientras haya alguno.
+1. Se diligencian los datos del colega, se marcan en el calendario uno o varios días y se elige
+   el horario (común para todos, ajustable por día); los errores salen junto a cada campo o día y
+   el botón Guardar no se activa mientras haya alguno.
 2. Cada registro guardado aparece en la lista "Registrado en esta ventana".
 3. "Descargar Excel" arma el formato con esa lista.
 4. "Administración" (enlace arriba a la derecha, o la dirección con `#admin`): con la clave de

@@ -3,20 +3,25 @@ import { diaDeSemana, diasDelMes, mesesPermitidos, mismoMes, nombreMes, tipoDia 
 
 const DIAS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
-/** Muestra el mes anterior o el mes en curso; fines de semana y festivos van resaltados. */
-export function CalendarioMes({ hoy, festivos, seleccionada, alElegir }: {
+/**
+ * Mes anterior o mes en curso; cada clic marca o desmarca un día. Fines de semana y festivos van
+ * resaltados, y los días que el colega ya tiene completos no se pueden marcar.
+ */
+export function CalendarioMes({ hoy, festivos, seleccionadas, llenos, alElegir }: {
   hoy: string;
   festivos: Map<string, string>;
-  seleccionada: string;
+  seleccionadas: Set<string>;
+  /** Fecha → códigos de los registros que ya llenan ese día. */
+  llenos: Map<string, string>;
   alElegir: (fecha: string) => void;
 }) {
   const meses = mesesPermitidos(hoy);
-  const [mes, setMes] = useState(() =>
-    meses.find((m) => seleccionada && mismoMes(m, seleccionada)) ?? meses[1]);
+  const [mes, setMes] = useState(meses[1]);
   const dias = diasDelMes(mes);
   const fechasFestivas = new Set(festivos.keys());
   // La semana empieza en domingo, que es el 0 de diaDeSemana.
   const huecos = diaDeSemana(dias[0]);
+  const elegidasEn = (m: string) => [...seleccionadas].filter((f) => mismoMes(f, m)).length;
 
   return (
     <div>
@@ -26,6 +31,7 @@ export function CalendarioMes({ hoy, festivos, seleccionada, alElegir }: {
             className={`rounded-md px-3 py-1.5 text-sm font-semibold transition-colors first-letter:uppercase
               ${m === mes ? 'bg-primario text-blanco' : 'text-texto-suave hover:text-texto'}`}>
             {nombreMes(m)}
+            {elegidasEn(m) > 0 && <span className="ml-1.5 font-normal opacity-80">({elegidasEn(m)})</span>}
           </button>
         ))}
       </div>
@@ -36,19 +42,24 @@ export function CalendarioMes({ hoy, festivos, seleccionada, alElegir }: {
         {Array.from({ length: huecos }, (_, i) => <span key={`h${i}`} />)}
         {dias.map((fecha) => {
           const tipo = tipoDia(fecha, fechasFestivas);
-          const elegida = fecha === seleccionada;
+          const elegida = seleccionadas.has(fecha);
           const esDomingo = diaDeSemana(fecha) === 0;
+          const lleno = llenos.get(fecha);
+          const bloqueado = esDomingo || (!!lleno && !elegida);
           const clase = elegida
-            ? 'bg-primario font-semibold text-blanco'
+            ? `font-semibold text-blanco ${lleno ? 'bg-error' : 'bg-primario'}`
             : esDomingo
               ? 'cursor-not-allowed text-texto-suave line-through'
-              : tipo === 'habil'
-                ? 'text-texto hover:bg-suave'
-                : 'bg-seleccion font-medium text-secundario hover:bg-suave';
+              : lleno
+                ? 'cursor-not-allowed bg-error-suave text-error line-through'
+                : tipo === 'habil'
+                  ? 'text-texto hover:bg-suave'
+                  : 'bg-seleccion font-medium text-secundario hover:bg-suave';
           return (
-            <button key={fecha} type="button" onClick={() => alElegir(fecha)} disabled={esDomingo}
+            <button key={fecha} type="button" onClick={() => alElegir(fecha)} disabled={bloqueado}
               title={esDomingo ? 'Domingo: no se registran horas extras'
-                : festivos.get(fecha) ?? (tipo === 'habil' ? undefined : 'Sábado')}
+                : lleno ? `Ya registrado (${lleno})`
+                  : festivos.get(fecha) ?? (tipo === 'habil' ? undefined : 'Sábado')}
               aria-pressed={elegida}
               className={`h-10 rounded-md text-sm transition-colors ${clase}
                 ${fecha === hoy && !elegida ? 'ring-1 ring-inset ring-primario' : ''}`}>
@@ -61,6 +72,10 @@ export function CalendarioMes({ hoy, festivos, seleccionada, alElegir }: {
         <li className="flex items-center gap-2">
           <span aria-hidden className="size-3 rounded-sm bg-seleccion" />
           Sábado o festivo: máximo 2:00 horas
+        </li>
+        <li className="flex items-center gap-2">
+          <span aria-hidden className="size-3 rounded-sm bg-error-suave" />
+          Ya registrado
         </li>
         <li className="flex items-center gap-2">
           <span aria-hidden className="size-3 rounded-sm ring-1 ring-inset ring-primario" />

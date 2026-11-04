@@ -58,6 +58,16 @@ export function formatoFecha(fecha: string): string {
   return fecha.split('-').reverse().join('/');
 }
 
+export function sumarDias(fecha: string, dias: number): string {
+  const [a, m, d] = fecha.split('-').map(Number);
+  return new Date(Date.UTC(a, m - 1, d + dias)).toISOString().slice(0, 10);
+}
+
+/** Lunes de la semana (lunes a domingo) de esa fecha. */
+export function lunesDe(fecha: string): string {
+  return sumarDias(fecha, -((diaDeSemana(fecha) + 6) % 7));
+}
+
 export function primerDiaMesAnterior(fecha: string): string {
   const [a, m] = fecha.split('-').map(Number);
   return m === 1 ? `${a - 1}-12-01` : `${a}-${String(m - 1).padStart(2, '0')}-01`;

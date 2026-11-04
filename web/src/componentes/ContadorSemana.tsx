@@ -29,7 +29,7 @@ export function ContadorSemana({ usadosMin, nuevosMin, topeMin, lunes, domingo }
       </div>
       <p className="text-xs text-texto-suave">
         Lleva {formatoDuracion(usadosMin)}
-        {nuevosMin > 0 && <> y este registro suma {formatoDuracion(nuevosMin)}</>}.
+        {nuevosMin > 0 && <> y esta selección suma {formatoDuracion(nuevosMin)}</>}.
         Le quedan {formatoDuracion(Math.max(0, topeMin - total))} esta semana.
       </p>
     </div>

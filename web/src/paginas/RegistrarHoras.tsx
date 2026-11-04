@@ -1,20 +1,20 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { CalendarioMes } from '../componentes/CalendarioMes';
 import { ContadorSemana } from '../componentes/ContadorSemana';
+import { ListaDias } from '../componentes/ListaDias';
 import { SelectorCargo } from '../componentes/SelectorCargo';
 import { Aviso, Boton, Campo, claseEntrada, Paso } from '../componentes/ui';
-import { formatoFecha, NOMBRE_TIPO_DIA, tipoDia } from '../lib/fechas';
-import { formatoDuracion, formatoHoraAmPm, minutosEntre, opcionesDeHora } from '../lib/horas';
-import { erroresLocales, FILIALES, finJornadaDe, NIVELES, nombrePropio, type Campo as NombreCampo, type DatosRegistro, type Errores } from '../lib/reglas';
+import { diasDelMes, formatoFecha, lunesDe, mesesPermitidos, sumarDias, tipoDia } from '../lib/fechas';
+import { formatoDuracion, formatoHoraAmPm, horaDeMinutos, minutosDelDia, minutosEntre } from '../lib/horas';
+import { erroresColega, erroresDia, FILIALES, finJornadaDe, NIVELES, nombrePropio, topeDelDia, type Campo as NombreCampo, type DatosColega, type DiaRegistro, type Errores } from '../lib/reglas';
 import { mensajeDeError, supabase } from '../lib/supabase';
 import type { Configuracion, Registro } from '../lib/tipos';
 
-const VACIO: DatosRegistro = {
-  identificacion: '', nombre_completo: '', cargo: '', nivel: null, filial: '',
-  fecha_horas_extras: '', hora_inicio: '', hora_final: '', justificacion: '',
+const VACIO: DatosColega = {
+  identificacion: '', nombre_completo: '', cargo: '', nivel: null, filial: '', justificacion: '',
 };
 
-const HORAS = opcionesDeHora();
+const aParametro = (d: DiaRegistro) => ({ fecha: d.fecha_horas_extras, inicio: d.hora_inicio, final: d.hora_final });
 
 export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
   hoy: string;
@@ -22,136 +22,191 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
   config: Configuracion;
   festivos: Map<string, string>;
 }) {
-  const [datos, setDatos] = useState<DatosRegistro>(VACIO);
+  const [datos, setDatos] = useState<DatosColega>(VACIO);
+  const [dias, setDias] = useState<DiaRegistro[]>([]);
+  // Horario común: se aplica a cada día al marcarlo y a todos al cambiarlo.
+  const [duracion, setDuracion] = useState(0);
+  const [inicioEspecial, setInicioEspecial] = useState('');
   const [tocados, setTocados] = useState<Set<NombreCampo>>(new Set());
-  const [erroresServidor, setErroresServidor] = useState<Errores>({});
+  const [erroresServidor, setErroresServidor] = useState<{ colega: Errores; dias: Record<string, Errores> }>(
+    { colega: {}, dias: {} });
   const [revisando, setRevisando] = useState(false);
-  const [semana, setSemana] = useState<{
-    minutos: number; lunes: string; domingo: string; minutosDia: number; codigosDia: string | null;
-  } | null>(null);
+  const [registrados, setRegistrados] = useState<Map<string, { minutos: number; codigos: string }>>(new Map());
+  const [version, setVersion] = useState(0);
   const [guardando, setGuardando] = useState(false);
   const [resultado, setResultado] = useState<{ tipo: 'error' | 'exito'; texto: string } | null>(null);
 
   const fechasFestivas = useMemo(() => new Set(festivos.keys()), [festivos]);
-  const tipo = datos.fecha_horas_extras ? tipoDia(datos.fecha_horas_extras, fechasFestivas) : null;
-  const topeDia = tipo === 'habil' ? config.topeDiarioMin : config.topeFinSemanaMin;
-  const finJornada = tipo === 'habil' ? finJornadaDe(datos.fecha_horas_extras, config) : null;
-  const minutos = datos.hora_inicio && datos.hora_final
-    ? Math.max(0, minutosEntre(datos.hora_inicio, datos.hora_final)) : 0;
+  const reglas = { hoy, festivos: fechasFestivas, ...config };
+  const topeDe = (fecha: string) => topeDelDia(fecha, reglas);
+  const finDe = (fecha: string) => finJornadaDe(fecha, config);
+  const minutosDe = (d: DiaRegistro) =>
+    d.hora_inicio && d.hora_final ? Math.max(0, minutosEntre(d.hora_inicio, d.hora_final)) : 0;
+  const hayEspeciales = dias.some((d) => tipoDia(d.fecha_horas_extras, fechasFestivas) !== 'habil');
+  const duraciones = Array.from({ length: Math.max(config.topeDiarioMin, config.topeFinSemanaMin) / 30 },
+    (_, i) => (i + 1) * 30);
 
-  const erroresLocal = erroresLocales(datos, { hoy, festivos: fechasFestivas, ...config });
-  // Se avisa apenas se elige la fecha, sin esperar a que el resto del formulario esté lleno.
-  const diaLleno = semana && semana.minutosDia > 0 && (tipo === 'habil' || semana.minutosDia >= topeDia);
-  const errorDia: Errores = diaLleno ? {
-    fecha_horas_extras: `El colega ya tiene horas extras registradas el ${formatoFecha(datos.fecha_horas_extras)} `
-      + `(${semana.codigosDia}). Ese día no admite más.`,
-  } : {};
-  const errores: Errores = { ...erroresServidor, ...errorDia, ...erroresLocal };
-  const hayErrores = Object.keys(errores).length > 0;
-  const identificacionValida = !erroresLocal.identificacion;
+  // Hábil: lleno con cualquier registro; sábado o festivo, con el tope completo.
+  const llenos = useMemo(() => {
+    const mapa = new Map<string, string>();
+    for (const [fecha, r] of registrados) {
+      const habil = tipoDia(fecha, fechasFestivas) === 'habil';
+      if (r.minutos > 0 && (habil || r.minutos >= config.topeFinSemanaMin)) mapa.set(fecha, r.codigos);
+    }
+    return mapa;
+  }, [registrados, fechasFestivas, config.topeFinSemanaMin]);
 
-  const opcionesFinal = datos.hora_inicio
-    ? HORAS.filter((h) => {
-      const despues = minutosEntre(datos.hora_inicio, h);
-      return despues > 0 && despues <= topeDia;
-    })
-    : [];
+  const locColega = erroresColega(datos);
+  const erroresDelColega: Errores = { ...erroresServidor.colega, ...locColega };
+  const erroresPorDia: Record<string, Errores> = {};
+  for (const d of dias) {
+    const fecha = d.fecha_horas_extras;
+    const lleno = llenos.get(fecha);
+    const locales = erroresDia(d, reglas);
+    // Sin horario completo todavía no es un error: se avisa junto al botón.
+    if (!d.hora_inicio || !d.hora_final) delete locales.hora_final;
+    erroresPorDia[fecha] = {
+      ...erroresServidor.dias[fecha],
+      ...(lleno ? { fecha_horas_extras: `El colega ya tiene horas extras registradas este día (${lleno}). Quítelo de la selección.` } : {}),
+      ...locales,
+    };
+  }
+  const diasConError = dias.filter((d) => Object.keys(erroresPorDia[d.fecha_horas_extras]).length > 0).length;
+  const sinHorario = dias.filter((d) => !d.hora_inicio || !d.hora_final).length;
+  const hayErrores = Object.keys(erroresDelColega).length > 0 || diasConError > 0 || sinHorario > 0
+    || dias.length === 0;
+  const identificacionValida = !locColega.identificacion;
+  const totalMinutos = dias.reduce((s, d) => s + minutosDe(d), 0);
 
-  function cambiar<K extends keyof DatosRegistro>(campo: K, valor: DatosRegistro[K]) {
+  function horarioDe(fecha: string, dur = duracion, inicioSab = inicioEspecial): DiaRegistro {
+    const habil = tipoDia(fecha, fechasFestivas) === 'habil';
+    const inicio = habil ? finDe(fecha) : inicioSab;
+    const fin = inicio && dur ? minutosDelDia(inicio) + dur : 0;
+    const final = fin && dur <= topeDe(fecha) && fin < 24 * 60 ? horaDeMinutos(fin) : '';
+    return { fecha_horas_extras: fecha, hora_inicio: inicio, hora_final: final };
+  }
+
+  function cambiar<K extends keyof DatosColega>(campo: K, valor: DatosColega[K]) {
     setDatos((d) => ({ ...d, [campo]: valor }));
     setTocados((t) => new Set(t).add(campo));
     setResultado(null);
   }
 
-  function elegirFecha(fecha: string) {
-    const esHabil = tipoDia(fecha, fechasFestivas) === 'habil';
-    setDatos((d) => {
-      const inicio = esHabil ? finJornadaDe(fecha, config) : d.hora_inicio;
-      const tope = esHabil ? config.topeDiarioMin : config.topeFinSemanaMin;
-      const finalValido = inicio && d.hora_final
-        && minutosEntre(inicio, d.hora_final) > 0 && minutosEntre(inicio, d.hora_final) <= tope;
-      return { ...d, fecha_horas_extras: fecha, hora_inicio: inicio, hora_final: finalValido ? d.hora_final : '' };
-    });
-    setTocados((t) => new Set(t).add('fecha_horas_extras'));
+  function alternarDia(fecha: string) {
+    setDias((lista) => lista.some((d) => d.fecha_horas_extras === fecha)
+      ? lista.filter((d) => d.fecha_horas_extras !== fecha)
+      : [...lista, horarioDe(fecha)].sort((a, b) => a.fecha_horas_extras.localeCompare(b.fecha_horas_extras)));
     setResultado(null);
   }
 
+  function cambiarDia(fecha: string, cambios: Partial<DiaRegistro>) {
+    setDias((lista) => lista.map((d) => {
+      if (d.fecha_horas_extras !== fecha) return d;
+      const nuevo = { ...d, ...cambios };
+      // Si cambia el inicio, la hora final se conserva solo si sigue siendo válida.
+      const despues = nuevo.hora_inicio && nuevo.hora_final ? minutosEntre(nuevo.hora_inicio, nuevo.hora_final) : 0;
+      if (despues <= 0 || despues > topeDe(fecha)) nuevo.hora_final = '';
+      return nuevo;
+    }));
+    setResultado(null);
+  }
+
+  function aplicarATodos(dur: number, inicioSab: string) {
+    setDuracion(dur);
+    setInicioEspecial(inicioSab);
+    setDias((lista) => lista.map((d) => horarioDe(d.fecha_horas_extras, dur, inicioSab)));
+    setResultado(null);
+  }
+
+  // Lo que el colega ya tiene en los dos meses permitidos, para bloquear días y sumar semanas.
   useEffect(() => {
-    setSemana(null);
-    if (!identificacionValida || !datos.fecha_horas_extras) return;
+    setRegistrados(new Map());
+    if (!identificacionValida) return;
+    const [desde, actual] = mesesPermitidos(hoy);
+    const hasta = diasDelMes(actual).at(-1)!;
     const espera = setTimeout(async () => {
-      const { data } = await supabase.rpc('resumen_colega', {
-        p_identificacion: datos.identificacion, p_fecha: datos.fecha_horas_extras,
+      const { data } = await supabase.rpc('dias_del_colega', {
+        p_identificacion: datos.identificacion, p_desde: desde, p_hasta: hasta,
       });
-      const fila = data?.[0];
-      if (fila) {
-        setSemana({ minutos: fila.minutos_semana, lunes: fila.lunes, domingo: fila.domingo,
-          minutosDia: fila.minutos_dia, codigosDia: fila.codigos_dia });
-      }
+      setRegistrados(new Map((data ?? []).map((f: { fecha: string; minutos: number; codigos: string }) =>
+        [f.fecha, { minutos: f.minutos, codigos: f.codigos }])));
     }, 300);
     return () => clearTimeout(espera);
-  }, [datos.identificacion, datos.fecha_horas_extras, identificacionValida]);
+  }, [datos.identificacion, identificacionValida, hoy, version]);
 
   // Las reglas que dependen de otros registros (tope semanal, descanso, cruces) las revisa la base.
-  const sinErroresLocales = Object.keys(erroresLocal).length === 0;
+  const listoParaRevisar = dias.length > 0 && sinHorario === 0 && Object.keys(locColega).length === 0
+    && dias.every((d) => Object.keys(erroresDia(d, reglas)).length === 0);
   useEffect(() => {
-    setErroresServidor({});
-    if (!sinErroresLocales) return;
+    setErroresServidor({ colega: {}, dias: {} });
+    if (!listoParaRevisar) return;
     setRevisando(true);
     const espera = setTimeout(async () => {
-      const { data, error } = await supabase.rpc('revisar_registro', {
+      const { data, error } = await supabase.rpc('revisar_varios', {
         p_identificacion: datos.identificacion,
         p_nivel: datos.nivel,
-        p_fecha: datos.fecha_horas_extras,
-        p_hora_inicio: datos.hora_inicio,
-        p_hora_final: datos.hora_final,
+        p_dias: dias.map(aParametro),
         p_justificacion: datos.justificacion,
       });
-      const encontrados: Errores = {};
-      for (const e of (data ?? []) as { campo: NombreCampo; mensaje: string }[]) {
-        encontrados[e.campo] ??= e.mensaje;
+      const colega: Errores = {};
+      const porDia: Record<string, Errores> = {};
+      for (const e of (data ?? []) as { fecha: string | null; campo: NombreCampo; mensaje: string }[]) {
+        const destino = e.fecha ? (porDia[e.fecha] ??= {}) : colega;
+        destino[e.campo] ??= e.mensaje;
       }
-      if (error) encontrados.justificacion = mensajeDeError(error);
-      setErroresServidor(encontrados);
+      if (error) colega.justificacion = mensajeDeError(error);
+      setErroresServidor({ colega, dias: porDia });
       setRevisando(false);
     }, 400);
     return () => { clearTimeout(espera); setRevisando(false); };
-  }, [datos, sinErroresLocales]);
+  }, [datos, dias, listoParaRevisar]);
 
   async function guardar(e: FormEvent) {
     e.preventDefault();
     setGuardando(true);
-    const { data, error } = await supabase.rpc('registrar_horas', {
+    const { data, error } = await supabase.rpc('registrar_varios', {
       p_identificacion: datos.identificacion,
       p_nombre_completo: datos.nombre_completo,
       p_cargo: datos.cargo,
       p_nivel: datos.nivel,
       p_filial: datos.filial,
-      p_fecha: datos.fecha_horas_extras,
-      p_hora_inicio: datos.hora_inicio,
-      p_hora_final: datos.hora_final,
+      p_dias: dias.map(aParametro),
       p_justificacion: datos.justificacion,
     });
     setGuardando(false);
     if (error) {
-      setResultado({ tipo: 'error', texto: mensajeDeError(error) });
+      setResultado({ tipo: 'error', texto: `No se guardó ningún día. ${mensajeDeError(error)}` });
       return;
     }
-    alRegistrar({ ...data[0], estado: 'registrada' });
+    const nuevos = data as Omit<Registro, 'estado'>[];
+    for (const r of nuevos) alRegistrar({ ...r, estado: 'registrada' });
+    const [primero] = nuevos;
     setResultado({
       tipo: 'exito',
-      texto: `Quedó registrado ${data[0].codigo}: ${datos.nombre_completo}, ${formatoFecha(datos.fecha_horas_extras)}, `
-        + `${formatoHoraAmPm(datos.hora_inicio)} a ${formatoHoraAmPm(datos.hora_final)}.`,
+      texto: nuevos.length === 1
+        ? `Quedó registrado ${primero.codigo}: ${datos.nombre_completo}, ${formatoFecha(primero.fecha_horas_extras)}, `
+          + `${formatoHoraAmPm(primero.hora_inicio)} a ${formatoHoraAmPm(primero.hora_final)}.`
+        : `Quedaron registrados ${nuevos.length} días para ${datos.nombre_completo} `
+          + `(${formatoDuracion(totalMinutos)} horas): ${nuevos.map((r) => r.codigo).join(', ')}.`,
     });
-    // Se conservan los datos del colega, que suele tener varios días por registrar.
-    setDatos((d) => ({ ...VACIO, identificacion: d.identificacion, nombre_completo: d.nombre_completo,
-      cargo: d.cargo, nivel: d.nivel, filial: d.filial }));
+    // Se conservan los datos del colega por si tiene más días por registrar.
+    setDatos((d) => ({ ...d, justificacion: '' }));
+    setDias([]);
     setTocados(new Set(['identificacion', 'nombre_completo', 'cargo', 'nivel', 'filial']));
+    setVersion((v) => v + 1);
   }
 
-  const errorVisible = (campo: NombreCampo) => (tocados.has(campo) ? errores[campo] : undefined);
+  const errorVisible = (campo: NombreCampo) => (tocados.has(campo) ? erroresDelColega[campo] : undefined);
 
-  const festivo = datos.fecha_horas_extras ? festivos.get(datos.fecha_horas_extras) : undefined;
+  // Un contador por cada semana que toca la selección.
+  const semanas = [...new Set(dias.map((d) => lunesDe(d.fecha_horas_extras)))].sort().map((lunes) => {
+    const domingo = sumarDias(lunes, 6);
+    const enSemana = (f: string) => f >= lunes && f <= domingo;
+    let usados = 0;
+    for (const [fecha, r] of registrados) if (enSemana(fecha)) usados += r.minutos;
+    const nuevos = dias.filter((d) => enSemana(d.fecha_horas_extras)).reduce((s, d) => s + minutosDe(d), 0);
+    return { lunes, domingo, usados, nuevos };
+  });
 
   return (
     <form onSubmit={guardar} noValidate
@@ -190,44 +245,50 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
           </div>
         </Paso>
 
-        <Paso numero={2} titulo="Fecha y horario" descripcion="Días del mes anterior o del mes en curso.">
+        <Paso numero={2} titulo="Días y horario"
+          descripcion="Marque uno o varios días del mes anterior o del mes en curso.">
           <div data-guia="fecha">
-            <Campo etiqueta="Fecha" error={diaLleno ? undefined : errorVisible('fecha_horas_extras')}>
-              <CalendarioMes hoy={hoy} festivos={festivos} seleccionada={datos.fecha_horas_extras}
-                alElegir={elegirFecha} />
+            <Campo etiqueta="Días">
+              <CalendarioMes hoy={hoy} festivos={festivos} llenos={llenos}
+                seleccionadas={new Set(dias.map((d) => d.fecha_horas_extras))} alElegir={alternarDia} />
             </Campo>
           </div>
-          {diaLleno && (
-            <div role="alert" className="flex gap-3 rounded-lg border border-error bg-error-suave p-4 text-error">
-              <span aria-hidden className="grid size-6 shrink-0 place-items-center rounded-full bg-error
-                text-sm font-bold text-blanco">!</span>
-              <div>
-                <p className="font-semibold">Este día ya está registrado</p>
-                <p className="mt-1 text-sm">{errorDia.fecha_horas_extras} Elija otra fecha.</p>
-              </div>
+          <div className="grid gap-4" data-guia="horario">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Campo etiqueta="Horas por día" htmlFor="duracion"
+                ayuda="Se aplica a todos los días; en día hábil empieza al terminar la jornada.">
+                <select id="duracion" value={duracion || ''} className={claseEntrada}
+                  onChange={(e) => aplicarATodos(Number(e.target.value), inicioEspecial)}>
+                  <option value="">Seleccione…</option>
+                  {duraciones.map((m) => <option key={m} value={m}>{formatoDuracion(m)} horas</option>)}
+                </select>
+              </Campo>
+              {hayEspeciales && (
+                <Campo etiqueta="Inicio en sábado o festivo" htmlFor="inicio-especial">
+                  <select id="inicio-especial" value={inicioEspecial} className={claseEntrada}
+                    onChange={(e) => aplicarATodos(duracion, e.target.value)}>
+                    <option value="">Seleccione…</option>
+                    {Array.from({ length: 47 }, (_, i) => horaDeMinutos(i * 30)).map((h) => (
+                      <option key={h} value={h}>{formatoHoraAmPm(h)}</option>
+                    ))}
+                  </select>
+                </Campo>
+              )}
             </div>
-          )}
-          <div className="grid gap-4 sm:grid-cols-2" data-guia="horario">
-            <Campo etiqueta="Hora de inicio" htmlFor="inicio" error={errorVisible('hora_inicio')}
-              ayuda={finJornada ? `Día hábil: inicia al terminar la jornada (${formatoHoraAmPm(finJornada)}).` : undefined}>
-              <select id="inicio" value={datos.hora_inicio} disabled={!tipo || tipo === 'habil'}
-                aria-invalid={!!errorVisible('hora_inicio')}
-                onChange={(e) => cambiar('hora_inicio', e.target.value)} className={claseEntrada}>
-                <option value="">Seleccione…</option>
-                {(finJornada ? [finJornada] : HORAS.slice(0, -1)).map((h) => (
-                  <option key={h} value={h}>{formatoHoraAmPm(h)}</option>
-                ))}
-              </select>
-            </Campo>
-            <Campo etiqueta="Hora final" htmlFor="final" error={errorVisible('hora_final')}
-              ayuda={tipo ? `Hasta ${formatoDuracion(topeDia)} horas este día.` : undefined}>
-              <select id="final" value={datos.hora_final} disabled={!datos.hora_inicio}
-                aria-invalid={!!errorVisible('hora_final')}
-                onChange={(e) => cambiar('hora_final', e.target.value)} className={claseEntrada}>
-                <option value="">Seleccione…</option>
-                {opcionesFinal.map((h) => <option key={h} value={h}>{formatoHoraAmPm(h)}</option>)}
-              </select>
-            </Campo>
+            {dias.length > 0 ? (
+              <div className="grid gap-2">
+                <p className="text-sm font-medium">
+                  {dias.length === 1 ? '1 día seleccionado' : `${dias.length} días seleccionados`}
+                  <span className="font-normal text-texto-suave"> · puede ajustar el horario de cada uno</span>
+                </p>
+                <ListaDias dias={dias} festivos={festivos} finJornadaDe={finDe} topeDe={topeDe}
+                  errores={erroresPorDia} alCambiar={cambiarDia} alQuitar={alternarDia} />
+              </div>
+            ) : (
+              <p className="rounded-lg border border-dashed border-borde px-4 py-6 text-center text-sm text-texto-suave">
+                Marque en el calendario los días que va a registrar.
+              </p>
+            )}
           </div>
         </Paso>
 
@@ -237,7 +298,8 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
             técnicas, entregas urgentes o ausencias imprevistas del personal), evitando razones
             genéricas o permanentes.
           </p>
-          <Campo etiqueta="Justificación" htmlFor="justificacion" error={errorVisible('justificacion')}>
+          <Campo etiqueta="Justificación" htmlFor="justificacion" error={errorVisible('justificacion')}
+            ayuda={dias.length > 1 ? 'Se usa la misma justificación para todos los días.' : undefined}>
             <textarea id="justificacion" rows={4} value={datos.justificacion}
               aria-invalid={!!errorVisible('justificacion')} aria-describedby="nota-justificacion"
               onChange={(e) => cambiar('justificacion', e.target.value)} className={claseEntrada} />
@@ -247,9 +309,9 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
 
       <aside data-guia="resumen" className="grid gap-5 rounded-xl border border-borde bg-blanco p-5 shadow-xs lg:sticky lg:top-6">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-texto-suave">Total del registro</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-texto-suave">Total de la selección</p>
           <p className="mt-1 text-4xl font-semibold text-primario">
-            {formatoDuracion(minutos)}<span className="ml-1 text-base font-medium text-texto-suave">horas</span>
+            {formatoDuracion(totalMinutos)}<span className="ml-1 text-base font-medium text-texto-suave">horas</span>
           </p>
         </div>
 
@@ -259,42 +321,41 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
             <dd className="text-right font-medium">{datos.nombre_completo.trim() || '—'}</dd>
           </div>
           <div className="flex justify-between gap-3">
-            <dt className="text-texto-suave">Fecha</dt>
+            <dt className="text-texto-suave">Días</dt>
             <dd className="text-right font-medium">
-              {datos.fecha_horas_extras ? formatoFecha(datos.fecha_horas_extras) : '—'}
-              {tipo && (
+              {dias.length === 0 ? '—' : dias.length === 1 ? formatoFecha(dias[0].fecha_horas_extras)
+                : `${dias.length} días`}
+              {dias.length > 1 && (
                 <span className="block text-xs font-normal text-texto-suave">
-                  {NOMBRE_TIPO_DIA[tipo]}{festivo ? ` · ${festivo}` : ''}
+                  {dias.map((d) => formatoFecha(d.fecha_horas_extras).slice(0, 5)).join(', ')}
                 </span>
               )}
             </dd>
           </div>
-          <div className="flex justify-between gap-3">
-            <dt className="text-texto-suave">Horario</dt>
-            <dd className="text-right font-medium">
-              {datos.hora_inicio && datos.hora_final
-                ? `${formatoHoraAmPm(datos.hora_inicio)} – ${formatoHoraAmPm(datos.hora_final)}` : '—'}
-            </dd>
-          </div>
         </dl>
 
-        {semana && (
-          <ContadorSemana usadosMin={semana.minutos} nuevosMin={minutos} topeMin={config.topeSemanalMin}
-            lunes={semana.lunes} domingo={semana.domingo} />
-        )}
+        {semanas.map((s) => (
+          <ContadorSemana key={s.lunes} usadosMin={s.usados} nuevosMin={s.nuevos} topeMin={config.topeSemanalMin}
+            lunes={s.lunes} domingo={s.domingo} />
+        ))}
 
         {resultado && <Aviso tipo={resultado.tipo}>{resultado.texto}</Aviso>}
-        {diaLleno && (
-          <p className="rounded-md bg-error-suave px-3 py-2 text-sm font-medium text-error">
-            Ese día ya está registrado para este colega.
-          </p>
-        )}
 
         <div className="grid gap-2">
           <Boton type="submit" className="py-2.5" disabled={hayErrores || revisando || guardando}>
-            {guardando ? 'Guardando…' : revisando ? 'Revisando reglas…' : 'Guardar registro'}
+            {guardando ? 'Guardando…' : revisando ? 'Revisando reglas…'
+              : dias.length > 1 ? `Guardar ${dias.length} registros` : 'Guardar registro'}
           </Boton>
-          {[...tocados].some((campo) => errores[campo]) && (
+          {diasConError > 0 ? (
+            <p className="text-center text-xs text-error">
+              {diasConError === 1 ? 'Un día no cumple las reglas' : `${diasConError} días no cumplen las reglas`}:
+              corríjalos o quítelos. No se guarda ninguno hasta que todos cumplan.
+            </p>
+          ) : sinHorario > 0 ? (
+            <p className="text-center text-xs text-texto-suave">
+              Falta el horario de {sinHorario === 1 ? 'un día' : `${sinHorario} días`}.
+            </p>
+          ) : [...tocados].some((campo) => erroresDelColega[campo]) && (
             <p className="text-center text-xs text-texto-suave">Corrija los campos marcados para poder guardar.</p>
           )}
         </div>

@@ -1,7 +1,22 @@
 import { describe, expect, it } from 'vitest';
-import { diasDelMes, formatoFecha, hoyBogota, primerDiaMesSiguiente, tipoDia } from '../src/lib/fechas';
+import { diasDelMes, formatoFecha, hoyBogota, lunesDe, mesesPermitidos, primerDiaMesSiguiente, sumarDias, tipoDia } from '../src/lib/fechas';
 
 const festivos = new Set(['2026-10-12', '2026-11-02']);
+
+describe('semanas y meses', () => {
+  it('lunesDe devuelve el lunes de la semana, aunque caiga en el mes anterior', () => {
+    expect(lunesDe('2026-11-01')).toBe('2026-10-26');
+    expect(lunesDe('2026-11-02')).toBe('2026-11-02');
+    expect(lunesDe('2026-11-08')).toBe('2026-11-02');
+  });
+  it('sumarDias cruza meses y años', () => {
+    expect(sumarDias('2026-12-28', 6)).toBe('2027-01-03');
+  });
+  it('mesesPermitidos son el anterior y el actual, también en enero', () => {
+    expect(mesesPermitidos('2026-11-04')).toEqual(['2026-10-01', '2026-11-01']);
+    expect(mesesPermitidos('2027-01-05')).toEqual(['2026-12-01', '2027-01-01']);
+  });
+});
 
 describe('tipoDia', () => {
   it('distingue hábil, sábado y domingo', () => {
