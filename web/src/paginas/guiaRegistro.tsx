@@ -22,7 +22,8 @@ export function pasosGuiaRegistro(config: Configuracion): PasoGuia[] {
       titulo: '2. La fecha',
       texto: (
         <>
-          <p>Solo se pueden elegir días del mes en curso. Los sábados y festivos están sombreados y los
+          <p>Se pueden elegir días del mes anterior o del mes en curso; arriba del calendario se cambia de
+            mes. Los sábados y festivos están sombreados y los
             domingos tachados: no se registran.</p>
           <p>Un festivo solo se permite si el colega no trabajó su sábado. Si el colega ya tiene horas ese
             día, aparece un aviso en rojo.</p>

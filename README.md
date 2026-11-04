@@ -19,7 +19,7 @@ al pie la política y las líneas de firma.
 | Máximo 12 horas por colega en la semana (lunes a domingo, aunque cruce de mes) | `HE_TOPE_SEMANAL` |
 | Festivo solo si el colega no trabajó su sábado (lunes festivo: el sábado anterior; otro día: el sábado de esa semana), y al revés | `HE_DESCANSO` |
 | Día hábil: inicio exactamente al terminar la jornada (5:00 PM; viernes 4:30 PM), sin pausas | `HE_INICIO_JORNADA` |
-| Fecha del mes y año en curso (hora de Bogotá) | `HE_FECHA_FUERA_DEL_MES` |
+| Fecha del mes anterior o del mes en curso (hora de Bogotá) | `HE_FECHA_FUERA_DEL_MES` |
 | Hora final posterior a la de inicio, sin pasar de medianoche | `HE_HORAS_INVALIDAS` |
 | Día ya registrado: hábil con cualquier registro, sábado o festivo con las 2:00 completas | `HE_DIA_REGISTRADO` |
 | Sin horarios cruzados el mismo día | `HE_SOLAPAMIENTO` |

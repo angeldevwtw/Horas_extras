@@ -1,22 +1,34 @@
-import { diaDeSemana, diasDelMes, nombreMes, tipoDia } from '../lib/fechas';
+import { useState } from 'react';
+import { diaDeSemana, diasDelMes, mesesPermitidos, mismoMes, nombreMes, tipoDia } from '../lib/fechas';
 
 const DIAS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
-/** Solo muestra los días del mes en curso; fines de semana y festivos van resaltados. */
+/** Muestra el mes anterior o el mes en curso; fines de semana y festivos van resaltados. */
 export function CalendarioMes({ hoy, festivos, seleccionada, alElegir }: {
   hoy: string;
   festivos: Map<string, string>;
   seleccionada: string;
   alElegir: (fecha: string) => void;
 }) {
-  const dias = diasDelMes(hoy);
+  const meses = mesesPermitidos(hoy);
+  const [mes, setMes] = useState(() =>
+    meses.find((m) => seleccionada && mismoMes(m, seleccionada)) ?? meses[1]);
+  const dias = diasDelMes(mes);
   const fechasFestivas = new Set(festivos.keys());
   // La semana empieza en domingo, que es el 0 de diaDeSemana.
   const huecos = diaDeSemana(dias[0]);
 
   return (
     <div>
-      <p className="mb-3 text-sm font-semibold first-letter:uppercase">{nombreMes(hoy)}</p>
+      <div role="group" aria-label="Mes" className="mb-3 inline-flex rounded-lg bg-suave p-1">
+        {meses.map((m) => (
+          <button key={m} type="button" onClick={() => setMes(m)} aria-pressed={m === mes}
+            className={`rounded-md px-3 py-1.5 text-sm font-semibold transition-colors first-letter:uppercase
+              ${m === mes ? 'bg-primario text-blanco' : 'text-texto-suave hover:text-texto'}`}>
+            {nombreMes(m)}
+          </button>
+        ))}
+      </div>
       <div className="grid grid-cols-7 gap-1 text-center">
         {DIAS.map((d) => (
           <span key={d} className="pb-1 text-xs font-medium uppercase tracking-wide text-texto-suave">{d}</span>

@@ -58,6 +58,16 @@ export function formatoFecha(fecha: string): string {
   return fecha.split('-').reverse().join('/');
 }
 
+export function primerDiaMesAnterior(fecha: string): string {
+  const [a, m] = fecha.split('-').map(Number);
+  return m === 1 ? `${a - 1}-12-01` : `${a}-${String(m - 1).padStart(2, '0')}-01`;
+}
+
+/** El mes anterior y el mes en curso, que son los que se pueden registrar. */
+export function mesesPermitidos(hoy: string): [string, string] {
+  return [primerDiaMesAnterior(hoy), `${hoy.slice(0, 7)}-01`];
+}
+
 export function primerDiaMesSiguiente(fecha: string): string {
   const [a, m] = fecha.split('-').map(Number);
   return m === 12 ? `${a + 1}-01-01` : `${a}-${String(m + 1).padStart(2, '0')}-01`;

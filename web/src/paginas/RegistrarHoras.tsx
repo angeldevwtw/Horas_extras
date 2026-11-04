@@ -190,7 +190,7 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
           </div>
         </Paso>
 
-        <Paso numero={2} titulo="Fecha y horario" descripcion="Solo días del mes en curso.">
+        <Paso numero={2} titulo="Fecha y horario" descripcion="Días del mes anterior o del mes en curso.">
           <div data-guia="fecha">
             <Campo etiqueta="Fecha" error={diaLleno ? undefined : errorVisible('fecha_horas_extras')}>
               <CalendarioMes hoy={hoy} festivos={festivos} seleccionada={datos.fecha_horas_extras}

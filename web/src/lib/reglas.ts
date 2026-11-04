@@ -1,6 +1,6 @@
 // Réplica de las reglas que se pueden revisar sin consultar la base, para avisar mientras se
 // diligencia. La base vuelve a validar todo al guardar; sus mensajes son los que mandan.
-import { diaDeSemana, mismoMes, nombreMes, tipoDia } from './fechas';
+import { diaDeSemana, mesesPermitidos, mismoMes, nombreMes, tipoDia } from './fechas';
 import { formatoDuracion, formatoHoraAmPm, minutosEntre } from './horas';
 
 export const NIVELES = [
@@ -77,8 +77,9 @@ export function erroresLocales(datos: DatosRegistro, reglas: Reglas): Errores {
     errores.fecha_horas_extras = 'La fecha es obligatoria.';
     return errores;
   }
-  if (!mismoMes(datos.fecha_horas_extras, reglas.hoy)) {
-    errores.fecha_horas_extras = `La fecha debe ser del mes en curso (${nombreMes(reglas.hoy)}).`;
+  const [anterior, actual] = mesesPermitidos(reglas.hoy);
+  if (!mismoMes(datos.fecha_horas_extras, anterior) && !mismoMes(datos.fecha_horas_extras, actual)) {
+    errores.fecha_horas_extras = `La fecha debe ser de ${nombreMes(anterior)} o de ${nombreMes(actual)}.`;
   }
   if (diaDeSemana(datos.fecha_horas_extras) === 0) {
     errores.fecha_horas_extras = 'Los domingos no se pueden registrar horas extras.';

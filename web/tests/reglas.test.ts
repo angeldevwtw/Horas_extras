@@ -43,9 +43,17 @@ describe('erroresLocales', () => {
     expect(errores({ ...festivo, hora_final: '11:00' })).toEqual({});
     expect(errores({ ...festivo, hora_final: '11:30' }).hora_final).toMatch(/festivo/);
   });
-  it('la fecha debe ser del mes y año en curso', () => {
-    expect(errores({ fecha_horas_extras: '2026-09-30' }).fecha_horas_extras).toMatch(/octubre de 2026/);
+  it('la fecha debe ser del mes anterior o del mes en curso', () => {
+    expect(errores({ fecha_horas_extras: '2026-09-30' }).fecha_horas_extras).toBeUndefined();
+    expect(errores({ fecha_horas_extras: '2026-08-31' }).fecha_horas_extras)
+      .toMatch(/septiembre de 2026 o de octubre de 2026/);
+    expect(errores({ fecha_horas_extras: '2026-11-03' }).fecha_horas_extras).toBeDefined();
     expect(errores({ fecha_horas_extras: '2025-10-15' }).fecha_horas_extras).toBeDefined();
+  });
+
+  it('en enero el mes anterior es diciembre del año pasado', () => {
+    const enero = { ...reglas, hoy: '2027-01-05' };
+    expect(erroresLocales({ ...valido, fecha_horas_extras: '2026-12-15' }, enero).fecha_horas_extras).toBeUndefined();
   });
   it('la hora final debe ser posterior a la de inicio', () => {
     const cruzaMedianoche = { fecha_horas_extras: '2026-10-17', hora_inicio: '23:00', hora_final: '01:00' };
