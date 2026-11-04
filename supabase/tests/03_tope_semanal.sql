@@ -1,5 +1,5 @@
 -- Máximo 12 horas por colega en la semana (lunes a domingo); las anuladas no cuentan.
-select prueba.reloj('2026-10-01 08:00');
+select prueba.reloj('2026-10-31 08:00');
 select prueba.anonimo();
 
 -- Semana del lunes 5 al domingo 11 de octubre (el viernes empieza a las 4:30 PM).
@@ -39,7 +39,7 @@ select prueba.debe_funcionar('Al anular un registro se liberan sus horas de la s
 select prueba.como_postgres();
 update public.configuracion set valor = '540' where clave = 'tope_semanal_min';
 select prueba.anonimo();
-select prueba.reloj('2026-12-28 08:00');
+select prueba.reloj('2026-12-31 08:00');
 select prueba.reg('3003', d::date, '17:00', '19:00')
 from unnest(array['2026-12-28', '2026-12-29', '2026-12-30', '2026-12-31']) d;
 select prueba.reloj('2027-01-02 07:00');

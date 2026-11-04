@@ -98,6 +98,11 @@ describe('erroresLocales', () => {
       expect(errores({ ...sufi, filial: 'Banco', minutos_extras: 60 }).hora_inicio).toBeDefined();
     });
   });
+  it('hoy se acepta y un día futuro del mes no', () => {
+    expect(errores({ fecha_horas_extras: '2026-10-15', hora_inicio: '17:00', hora_final: '19:00' })).toEqual({});
+    expect(errores({ fecha_horas_extras: '2026-10-16', hora_inicio: '16:30', hora_final: '18:30' })
+      .fecha_horas_extras).toMatch(/posterior a hoy/);
+  });
   it('la justificación es obligatoria', () => {
     expect(errores({ justificacion: '  ' }).justificacion).toBeDefined();
   });

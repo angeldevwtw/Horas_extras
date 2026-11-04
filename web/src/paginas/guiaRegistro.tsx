@@ -22,7 +22,8 @@ export function pasosGuiaRegistro(config: Configuracion): PasoGuia[] {
       titulo: '2. Los días',
       texto: (
         <>
-          <p>Marque uno o varios días del mes anterior o del mes en curso; un segundo clic lo desmarca y
+          <p>Marque uno o varios días del mes anterior o del mes en curso, hasta hoy: las horas extras se
+            registran después de trabajarlas. Un segundo clic lo desmarca y
             arriba del calendario se cambia de mes. Cada fila es una semana de lunes a domingo, la misma
             con la que se cuenta el máximo semanal; los fines de semana y festivos están sombreados.</p>
           <p>Los días que el colega ya tiene registrados salen en rojo y no se pueden marcar. En un fin de

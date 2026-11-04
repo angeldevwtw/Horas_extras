@@ -1,7 +1,7 @@
 -- Un festivo solo si el colega no trabajó su sábado (lunes festivo: el sábado anterior;
 -- festivo de otro día: el sábado de esa semana), y al revés. El domingo, en
 -- 16_domingo_si_descansa_sabado.sql.
-select prueba.reloj('2026-10-01 08:00');
+select prueba.reloj('2026-10-31 08:00');
 select prueba.anonimo();
 
 select prueba.reg('5001', '2026-10-10', '08:00', '10:00');
@@ -25,7 +25,7 @@ select prueba.debe_funcionar('Al anular el festivo, el sábado anterior queda pe
   $$select prueba.reg('5002', '2026-10-10', '08:00', '09:00')$$);
 
 -- Festivo en martes (8 de diciembre): se compara con el sábado de esa semana (12 de diciembre).
-select prueba.reloj('2026-12-01 08:00');
+select prueba.reloj('2026-12-31 08:00');
 select prueba.reg('5004', '2026-12-12', '08:00', '10:00');
 select prueba.debe_fallar('Martes festivo: si trabajó el sábado de esa semana, se rechaza',
   $$select prueba.reg('5004', '2026-12-08', '09:00', '10:00')$$, 'HE_DESCANSO');
@@ -41,9 +41,9 @@ select prueba.debe_fallar('Viernes festivo: si trabajó el sábado siguiente, se
   $$select prueba.reg('5006', '2026-12-25', '09:00', '10:00')$$, 'HE_DESCANSO');
 
 -- Sábado 31 de octubre y lunes festivo 2 de noviembre: la pareja cruza de mes.
-select prueba.reloj('2026-10-30 08:00');
+select prueba.reloj('2026-10-31 08:00');
 select prueba.reg('5007', '2026-10-31', '08:00', '10:00');
-select prueba.reloj('2026-11-01 07:00');
+select prueba.reloj('2026-11-02 07:00');
 select prueba.debe_fallar('Sábado 31 de octubre trabajado: el lunes festivo 2 de noviembre se rechaza',
   $$select prueba.reg('5007', '2026-11-02', '08:00', '09:00')$$, 'HE_DESCANSO');
 select prueba.debe_funcionar('Lunes festivo 2 de noviembre sin sábado trabajado se acepta',

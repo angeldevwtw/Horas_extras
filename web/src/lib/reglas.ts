@@ -107,6 +107,8 @@ export function erroresDia(datos: DiaRegistro, reglas: Reglas, filial = ''): Err
   const [anterior, actual] = mesesPermitidos(reglas.hoy);
   if (!mismoMes(datos.fecha_horas_extras, anterior) && !mismoMes(datos.fecha_horas_extras, actual)) {
     errores.fecha_horas_extras = `La fecha debe ser de ${nombreMes(anterior)} o de ${nombreMes(actual)}.`;
+  } else if (datos.fecha_horas_extras > reglas.hoy) {
+    errores.fecha_horas_extras = 'Las horas extras se registran después de trabajarlas: la fecha no puede ser posterior a hoy.';
   }
 
   if (!datos.hora_inicio || !datos.hora_final) {

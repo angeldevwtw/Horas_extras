@@ -1,5 +1,5 @@
 -- El registro conserva los datos del colega de ese momento; el colega queda con los nuevos.
-select prueba.reloj('2026-10-01 08:00');
+select prueba.reloj('2026-10-31 08:00');
 select prueba.anonimo();
 
 select prueba.ok('registrar_horas devuelve el registro listo para el Excel',

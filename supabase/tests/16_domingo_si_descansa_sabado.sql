@@ -1,6 +1,6 @@
 -- Caso excepcional: quien descansa el sábado puede trabajar el domingo. En un fin de semana se
 -- registra el sábado o el domingo, no los dos, y el festivo se compara con los dos días.
-select prueba.reloj('2026-11-04 08:00');
+select prueba.reloj('2026-11-30 08:00');
 select prueba.anonimo();
 
 select prueba.debe_funcionar('Domingo sin sábado trabajado: 2:00 se aceptan',

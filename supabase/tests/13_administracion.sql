@@ -1,5 +1,5 @@
 -- Administración con la clave: lista del mes con anulados y anulación por código.
-select prueba.reloj('2026-10-01 08:00');
+select prueba.reloj('2026-10-31 08:00');
 select prueba.como_postgres();
 select privado.cambiar_clave_descarga('clave-de-prueba-admin');
 delete from privado.intentos_descarga;

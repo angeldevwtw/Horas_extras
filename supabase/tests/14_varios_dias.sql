@@ -1,5 +1,5 @@
 -- Varios días a la vez: se guardan todos o ninguno, y los días elegidos cuentan entre ellos.
-select prueba.reloj('2026-11-04 08:00');
+select prueba.reloj('2026-11-30 08:00');
 
 create function prueba.varios(p_identificacion text, p_dias jsonb, p_nivel integer default 68)
 returns setof bigint language sql as $$

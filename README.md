@@ -22,6 +22,7 @@ al pie la política y las líneas de firma.
 | Sufi en día hábil: jornada con final máximo a las 9:00 PM | `HE_FIN_SUFI` |
 | Sufi en día hábil: total de horas extras en medias horas y dentro de la jornada | `HE_TOTAL_INVALIDO` |
 | Fecha del mes anterior o del mes en curso (hora de Bogotá) | `HE_FECHA_FUERA_DEL_MES` |
+| Fecha no posterior a hoy: se registra después de trabajar (hora de Bogotá) | `HE_FECHA_FUTURA` |
 | Hora final posterior a la de inicio, sin pasar de medianoche | `HE_HORAS_INVALIDAS` |
 | Día ya registrado: hábil con cualquier registro, sábado o festivo con las 2:00 completas | `HE_DIA_REGISTRADO` |
 | Sin horarios cruzados el mismo día | `HE_SOLAPAMIENTO` |

@@ -1,5 +1,5 @@
 -- En varios días, cada uno puede traer su justificación; si no, usa la general.
-select prueba.reloj('2026-11-04 08:00');
+select prueba.reloj('2026-11-30 08:00');
 
 create function prueba.varios_j(p_identificacion text, p_dias jsonb, p_general text)
 returns setof bigint language sql as $$

@@ -10,7 +10,7 @@ const TITULO_FIN_DE_SEMANA: Record<number, string> = {
 
 /**
  * Mes anterior o mes en curso; cada clic marca o desmarca un día. Fines de semana y festivos van
- * resaltados, y los días que el colega ya tiene completos no se pueden marcar.
+ * resaltados; los días futuros y los que el colega ya tiene completos no se pueden marcar.
  */
 export function CalendarioMes({ hoy, festivos, seleccionadas, llenos, alElegir }: {
   hoy: string;
@@ -49,17 +49,21 @@ export function CalendarioMes({ hoy, festivos, seleccionadas, llenos, alElegir }
           const tipo = tipoDia(fecha, fechasFestivas);
           const elegida = seleccionadas.has(fecha);
           const lleno = llenos.get(fecha);
-          const bloqueado = !!lleno && !elegida;
+          const futuro = fecha > hoy;
+          const bloqueado = futuro || (!!lleno && !elegida);
           const clase = elegida
             ? `font-semibold text-blanco ${lleno ? 'bg-error' : 'bg-primario'}`
-            : lleno
-              ? 'cursor-not-allowed bg-error-suave text-error line-through'
-              : tipo === 'habil'
-                ? 'text-texto hover:bg-suave'
-                : 'bg-seleccion font-medium text-secundario hover:bg-suave';
+            : futuro
+              ? 'cursor-not-allowed text-texto-suave opacity-40'
+              : lleno
+                ? 'cursor-not-allowed bg-error-suave text-error line-through'
+                : tipo === 'habil'
+                  ? 'text-texto hover:bg-suave'
+                  : 'bg-seleccion font-medium text-secundario hover:bg-suave';
           return (
             <button key={fecha} type="button" onClick={() => alElegir(fecha)} disabled={bloqueado}
-              title={lleno ? `Ya registrado (${lleno})`
+              title={futuro ? 'Se registra después de trabajarlo'
+                : lleno ? `Ya registrado (${lleno})`
                 : festivos.get(fecha) ?? TITULO_FIN_DE_SEMANA[diaDeSemana(fecha)]}
               aria-pressed={elegida}
               className={`h-10 rounded-md text-sm transition-colors ${clase}
@@ -83,6 +87,7 @@ export function CalendarioMes({ hoy, festivos, seleccionadas, llenos, alElegir }
           Hoy
         </li>
         <li>Sábado o domingo, no los dos</li>
+        <li><span className="opacity-40">Días futuros</span>: se registran después de trabajarlos</li>
       </ul>
     </div>
   );

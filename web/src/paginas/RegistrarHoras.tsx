@@ -293,7 +293,7 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
         </Paso>
 
         <Paso numero={2} titulo="Días y horario"
-          descripcion="Marque uno o varios días del mes anterior o del mes en curso.">
+          descripcion="Marque uno o varios días del mes anterior o del mes en curso, hasta hoy.">
           <div data-guia="fecha">
             <Campo etiqueta="Días">
               <CalendarioMes hoy={hoy} festivos={festivos} llenos={llenos}

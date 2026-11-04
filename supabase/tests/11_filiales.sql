@@ -1,5 +1,5 @@
 -- Solo las cuatro filiales: Banco, Sufi, Leasing y Empleados.
-select prueba.reloj('2026-10-01 08:00');
+select prueba.reloj('2026-10-31 08:00');
 select prueba.anonimo();
 
 select prueba.debe_funcionar('Filial ' || f || ' se acepta',

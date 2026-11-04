@@ -1,5 +1,5 @@
 -- Máximo 2 horas en día hábil.
-select prueba.reloj('2026-10-01 08:00');
+select prueba.reloj('2026-10-31 08:00');
 select prueba.anonimo();
 
 select prueba.debe_funcionar('Día hábil: exactamente 2:00 se acepta',

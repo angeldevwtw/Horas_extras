@@ -1,5 +1,5 @@
 -- Sin login: desde la API solo se puede registrar y anular con la clave; nada se puede leer.
-select prueba.reloj('2026-10-01 08:00');
+select prueba.reloj('2026-10-31 08:00');
 select prueba.anonimo();
 select prueba.reg('8001', '2026-10-05', '17:00', '19:00');
 

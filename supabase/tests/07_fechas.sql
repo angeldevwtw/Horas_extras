@@ -1,5 +1,5 @@
 -- La fecha debe ser del mes anterior o del mes en curso, y las horas deben tener sentido.
-select prueba.reloj('2026-10-15 08:00');
+select prueba.reloj('2026-10-31 08:00');
 select prueba.anonimo();
 
 select prueba.debe_funcionar('Primer día del mes en curso se acepta',
@@ -37,7 +37,7 @@ select prueba.reloj('2027-01-05 08:00');
 select prueba.debe_funcionar('En enero se acepta diciembre del año anterior',
   $$select prueba.reg('7014', '2026-12-15', '17:00', '18:00')$$);
 
-select prueba.reloj('2026-10-15 08:00');
+select prueba.reloj('2026-10-31 08:00');
 select prueba.ok('revisar_registro devuelve todos los errores a la vez',
   (select array_agg(codigo order by codigo) = array['HE_INICIO_JORNADA', 'HE_JUSTIFICACION',
      'HE_NIVEL', 'HE_TOPE_DIARIO']

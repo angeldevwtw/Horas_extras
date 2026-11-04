@@ -1,5 +1,5 @@
 -- Descarga del mes con clave compartida.
-select prueba.reloj('2026-10-01 08:00');
+select prueba.reloj('2026-10-31 08:00');
 select prueba.anonimo();
 select prueba.reg('1101', '2026-10-05', '17:00', '19:00');
 select prueba.reg('1102', '2026-10-06', '17:00', '18:00');
@@ -20,7 +20,7 @@ select privado.cambiar_clave_descarga('clave-de-prueba-rrhh');
 select prueba.ok('La clave no se guarda en texto plano',
   (select hash <> 'clave-de-prueba-rrhh' and hash ~ '^[0-9a-f]{64}$' from privado.clave_descarga));
 select prueba.anular((select id from prueba.claves order by id desc limit 1));
-select prueba.reloj('2026-11-02 08:00');
+select prueba.reloj('2026-11-03 08:00');
 select prueba.anonimo();
 select prueba.reg('1104', '2026-11-03', '17:00', '18:00');
 

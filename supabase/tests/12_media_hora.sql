@@ -1,5 +1,5 @@
 -- Solo horas en punto o y media.
-select prueba.reloj('2026-10-01 08:00');
+select prueba.reloj('2026-10-31 08:00');
 select prueba.anonimo();
 
 select prueba.debe_funcionar('Sábado de 8:30 a 10:00 se acepta',
