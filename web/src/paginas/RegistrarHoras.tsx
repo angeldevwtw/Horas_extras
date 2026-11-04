@@ -6,7 +6,7 @@ import { SelectorCargo } from '../componentes/SelectorCargo';
 import { Aviso, Boton, Campo, claseEntrada, Paso } from '../componentes/ui';
 import { diaDeSemana, diasDelMes, formatoFecha, lunesDe, mesesPermitidos, sumarDias, tipoDia } from '../lib/fechas';
 import { formatoDuracion, formatoHoraAmPm, horaDeMinutos, minutosDelDia, minutosEntre } from '../lib/horas';
-import { erroresColega, erroresDia, FILIALES, finJornadaDe, NIVELES, nombrePropio, topeDelDia, type Campo as NombreCampo, type DatosColega, type DiaRegistro, type Errores } from '../lib/reglas';
+import { erroresColega, erroresDia, FILIALES, finJornadaDe, NIVELES, nombrePropio, tieneHorarioEspecial, topeDelDia, type Campo as NombreCampo, type DatosColega, type DiaRegistro, type Errores } from '../lib/reglas';
 import { mensajeDeError, supabase } from '../lib/supabase';
 import type { Configuracion, Registro } from '../lib/tipos';
 
@@ -43,8 +43,12 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
   const reglas = { hoy, festivos: fechasFestivas, ...config };
   const topeDe = (fecha: string) => topeDelDia(fecha, reglas);
   const finDe = (fecha: string) => finJornadaDe(fecha, config);
-  const minutosDe = (d: DiaRegistro) =>
-    d.hora_inicio && d.hora_final ? Math.max(0, minutosEntre(d.hora_inicio, d.hora_final)) : 0;
+  const esEspecial = (fecha: string, filial = datos.filial) => tieneHorarioEspecial(filial, fecha, fechasFestivas);
+  const minutosDe = (d: DiaRegistro) => {
+    if (esEspecial(d.fecha_horas_extras)) return d.minutos_extras ?? 0;
+    return d.hora_inicio && d.hora_final ? Math.max(0, minutosEntre(d.hora_inicio, d.hora_final)) : 0;
+  };
+  const hayJornadaEspecial = dias.some((d) => esEspecial(d.fecha_horas_extras));
   const duraciones = Array.from({ length: Math.max(config.topeDiarioMin, config.topeFinSemanaMin) / 30 },
     (_, i) => (i + 1) * 30);
 
@@ -63,6 +67,7 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
   if (porDia) delete locColega.justificacion;
   const aParametro = (d: DiaRegistro) => ({
     fecha: d.fecha_horas_extras, inicio: d.hora_inicio, final: d.hora_final,
+    ...(esEspecial(d.fecha_horas_extras) ? { minutos: d.minutos_extras } : {}),
     ...(porDia ? { justificacion: justificaciones[d.fecha_horas_extras] ?? '' } : {}),
   });
   const faltaJustificacion = (fecha: string) => porDia && !(justificaciones[fecha] ?? '').trim();
@@ -71,9 +76,10 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
   for (const d of dias) {
     const fecha = d.fecha_horas_extras;
     const lleno = llenos.get(fecha);
-    const locales = erroresDia(d, reglas);
+    const locales = erroresDia(d, reglas, datos.filial);
     // Sin horario completo todavía no es un error: se avisa junto al botón.
     if (!d.hora_inicio || !d.hora_final) delete locales.hora_final;
+    if (!d.minutos_extras) delete locales.minutos_totales;
     erroresPorDia[fecha] = {
       ...erroresServidor.dias[fecha],
       ...(lleno ? { fecha_horas_extras: `El colega ya tiene horas extras registradas este día (${lleno}). Quítelo de la selección.` } : {}),
@@ -84,16 +90,22 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
   const diasConError = dias.filter((d) => Object.keys(erroresPorDia[d.fecha_horas_extras])
     .some((campo) => campo !== 'justificacion' || !faltaJustificacion(d.fecha_horas_extras))).length;
   const sinJustificacion = dias.filter((d) => faltaJustificacion(d.fecha_horas_extras)).length;
-  const sinHorario = dias.filter((d) => !d.hora_inicio || !d.hora_final).length;
+  const sinHorario = dias.filter((d) => !d.hora_inicio || !d.hora_final
+    || (esEspecial(d.fecha_horas_extras) && !d.minutos_extras)).length;
   const hayErrores = Object.keys(erroresDelColega).length > 0 || diasConError > 0 || sinHorario > 0
     || sinJustificacion > 0
     || dias.length === 0;
   const identificacionValida = !locColega.identificacion;
   const totalMinutos = dias.reduce((s, d) => s + minutosDe(d), 0);
 
-  const horarioDeSemana = (lunes: string): HorarioSemana => horarios[lunes] ?? { duracion: 0, inicio: '' };
+  const horarioDeSemana = (lunes: string): HorarioSemana => horarios[lunes] ?? { duracion: 0, inicio: '', inicioJornada: '', finalJornada: '' };
 
-  function horarioDe(fecha: string, { duracion: dur, inicio: inicioSab } = horarioDeSemana(lunesDe(fecha))): DiaRegistro {
+  function horarioDe(fecha: string, horario = horarioDeSemana(lunesDe(fecha)), filial = datos.filial): DiaRegistro {
+    const { duracion: dur, inicio: inicioSab } = horario;
+    if (esEspecial(fecha, filial)) {
+      return { fecha_horas_extras: fecha, hora_inicio: horario.inicioJornada, hora_final: horario.finalJornada,
+        minutos_extras: dur };
+    }
     const habil = tipoDia(fecha, fechasFestivas) === 'habil';
     const inicio = habil ? finDe(fecha) : inicioSab;
     const fin = inicio && dur ? minutosDelDia(inicio) + dur : 0;
@@ -105,6 +117,13 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
     setDatos((d) => ({ ...d, [campo]: valor }));
     setTocados((t) => new Set(t).add(campo));
     setResultado(null);
+  }
+
+  // El horario de Sufi se marca distinto: los días elegidos se arman de nuevo con la filial nueva.
+  function cambiarFilial(filial: string) {
+    cambiar('filial', filial);
+    setDias((lista) => lista.map((d) =>
+      horarioDe(d.fecha_horas_extras, horarioDeSemana(lunesDe(d.fecha_horas_extras)), filial)));
   }
 
   function alternarDia(fecha: string) {
@@ -120,7 +139,7 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
       const nuevo = { ...d, ...cambios };
       // Si cambia el inicio, la hora final se conserva solo si sigue siendo válida.
       const despues = nuevo.hora_inicio && nuevo.hora_final ? minutosEntre(nuevo.hora_inicio, nuevo.hora_final) : 0;
-      if (despues <= 0 || despues > topeDe(fecha)) nuevo.hora_final = '';
+      if (despues <= 0 || (!esEspecial(fecha) && despues > topeDe(fecha))) nuevo.hora_final = '';
       return nuevo;
     }));
     setResultado(null);
@@ -151,7 +170,7 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
 
   // Las reglas que dependen de otros registros (tope semanal, descanso, cruces) las revisa la base.
   const listoParaRevisar = dias.length > 0 && sinHorario === 0 && Object.keys(locColega).length === 0
-    && dias.every((d) => Object.keys(erroresDia(d, reglas)).length === 0 && !faltaJustificacion(d.fecha_horas_extras));
+    && dias.every((d) => Object.keys(erroresDia(d, reglas, datos.filial)).length === 0 && !faltaJustificacion(d.fecha_horas_extras));
   useEffect(() => {
     setErroresServidor({ colega: {}, dias: {} });
     if (!listoParaRevisar) return;
@@ -162,6 +181,7 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
         p_nivel: datos.nivel,
         p_dias: dias.map(aParametro),
         p_justificacion: datos.justificacion,
+        p_filial: datos.filial,
       });
       const colega: Errores = {};
       const porDia: Record<string, Errores> = {};
@@ -264,7 +284,7 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
             </Campo>
             <Campo etiqueta="Filial" htmlFor="filial" error={errorVisible('filial')}>
               <select id="filial" value={datos.filial} aria-invalid={!!errorVisible('filial')}
-                onChange={(e) => cambiar('filial', e.target.value)} className={claseEntrada}>
+                onChange={(e) => cambiarFilial(e.target.value)} className={claseEntrada}>
                 <option value="">Seleccione…</option>
                 {FILIALES.map((f) => <option key={f}>{f}</option>)}
               </select>
@@ -286,13 +306,16 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
                 <p className="text-sm font-medium">
                   {dias.length === 1 ? '1 día seleccionado' : `${dias.length} días seleccionados`}
                   <span className="font-normal text-texto-suave">
-                    {' '}· en día hábil las horas empiezan al terminar la jornada; puede ajustar cada día
+                    {' '}· {hayJornadaEspecial
+                      ? 'en día hábil marque la jornada y el total de horas extras; puede ajustar cada día'
+                      : 'en día hábil las horas empiezan al terminar la jornada; puede ajustar cada día'}
                   </span>
                 </p>
                 {semanas.map((s) => (
                   <BloqueSemana key={s.lunes} lunes={s.lunes} dias={s.dias} horario={horarioDeSemana(s.lunes)}
                     duraciones={duraciones} topeSemanalMin={config.topeSemanalMin} usadosMin={s.usados}
-                    festivos={festivos} finJornadaDe={finDe} topeDe={topeDe} errores={erroresPorDia}
+                    festivos={festivos} finJornadaDe={finDe} finJornadaSufi={config.finJornadaSufi} topeDe={topeDe}
+                    esEspecial={esEspecial} minutosDe={minutosDe} errores={erroresPorDia}
                     alCambiarHorario={(h) => aplicarASemana(s.lunes, h)} alCambiarDia={cambiarDia}
                     alQuitar={alternarDia} />
                 ))}

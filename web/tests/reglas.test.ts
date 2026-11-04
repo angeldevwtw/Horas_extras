@@ -6,6 +6,7 @@ const reglas: Reglas = {
   festivos: new Set(['2026-10-12']),
   finJornada: '17:00',
   finJornadaViernes: '16:30',
+  finJornadaSufi: '21:00',
   topeDiarioMin: 120,
   topeFinSemanaMin: 120,
 };
@@ -75,6 +76,27 @@ describe('erroresLocales', () => {
     const domingo = { fecha_horas_extras: '2026-10-11' };
     expect(errores({ ...domingo, hora_inicio: '08:00', hora_final: '10:00' })).toEqual({});
     expect(errores({ ...domingo, hora_inicio: '08:00', hora_final: '10:30' }).hora_final).toMatch(/fin de semana/);
+  });
+  describe('Sufi en día hábil', () => {
+    const sufi = { filial: 'Sufi', hora_inicio: '12:00', hora_final: '21:00' };
+    it('marca la jornada y aparte el total, sin inicio fijo', () => {
+      expect(errores({ ...sufi, minutos_extras: 60 })).toEqual({});
+    });
+    it('la jornada termina máximo a las 9:00 PM', () => {
+      expect(errores({ ...sufi, hora_final: '21:30', minutos_extras: 60 }).hora_final).toMatch(/9:00 PM/);
+    });
+    it('el total es obligatorio, con el tope diario y dentro de la jornada', () => {
+      expect(errores(sufi).minutos_totales).toBeDefined();
+      expect(errores({ ...sufi, minutos_extras: 150 }).minutos_totales).toMatch(/Máximo 2:00/);
+      expect(errores({ ...sufi, hora_inicio: '20:30', minutos_extras: 60 }).minutos_totales).toMatch(/jornada/);
+    });
+    it('en sábado o festivo sigue la regla general', () => {
+      expect(errores({ ...sufi, fecha_horas_extras: '2026-10-10', minutos_extras: 60 }).hora_final).toMatch(/fin de semana/);
+      expect(errores({ ...sufi, fecha_horas_extras: '2026-10-12', minutos_extras: 60 }).hora_final).toMatch(/fin de semana/);
+    });
+    it('las demás filiales siguen con inicio fijo', () => {
+      expect(errores({ ...sufi, filial: 'Banco', minutos_extras: 60 }).hora_inicio).toBeDefined();
+    });
   });
   it('la justificación es obligatoria', () => {
     expect(errores({ justificacion: '  ' }).justificacion).toBeDefined();

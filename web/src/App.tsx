@@ -25,6 +25,7 @@ async function leerDatosBase(): Promise<DatosBase> {
     config: {
       finJornada: valor('fin_jornada'),
       finJornadaViernes: valor('fin_jornada_viernes'),
+      finJornadaSufi: valor('fin_jornada_sufi'),
       topeDiarioMin: Number(valor('tope_diario_min')),
       topeFinSemanaMin: Number(valor('tope_fin_semana_min')),
       topeSemanalMin: Number(valor('tope_semanal_min')),
@@ -120,6 +121,7 @@ function ReglasEnBreve({ config }: { config: Configuracion }) {
     `Máximo ${enHoras(config.topeDiarioMin)} por día y ${enHoras(config.topeSemanalMin)} por semana`,
     `Lunes a jueves desde las ${formatoHoraAmPm(config.finJornada)}; viernes desde las ${formatoHoraAmPm(config.finJornadaViernes)}`,
     'Sábado o domingo, no los dos; festivo solo si no se trabajó ese fin de semana',
+    `Sufi: se marca la jornada, hasta las ${formatoHoraAmPm(config.finJornadaSufi)}, y el total de horas extras`,
   ];
   return (
     <ul className="mt-3 flex flex-wrap gap-2 text-xs text-texto-suave">

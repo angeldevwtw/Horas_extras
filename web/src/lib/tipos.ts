@@ -32,6 +32,7 @@ export type RegistroAdmin = FilaFormato & Pick<Registro, 'codigo' | 'tipo_dia' |
 export interface Configuracion {
   finJornada: string;
   finJornadaViernes: string;
+  finJornadaSufi: string;
   topeDiarioMin: number;
   topeFinSemanaMin: number;
   topeSemanalMin: number;

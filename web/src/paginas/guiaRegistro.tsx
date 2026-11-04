@@ -43,6 +43,9 @@ export function pasosGuiaRegistro(config: Configuracion): PasoGuia[] {
             semana o festivo se elige la hora de inicio.</p>
           <p>En la lista de días puede ajustar el horario de cualquiera o quitarlo. Las horas van en punto o
             y media, con máximo {formatoDuracion(config.topeDiarioMin)} por día.</p>
+          <p><strong>Sufi:</strong> en día hábil marque el inicio y el final de la jornada, hasta
+            las {formatoHoraAmPm(config.finJornadaSufi)}, y elija el total de horas extras. Los fines de semana
+            y festivos se registran como en las demás filiales.</p>
         </>
       ),
     },

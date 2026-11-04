@@ -29,7 +29,7 @@ export function nombrePropio(texto: string): string {
 }
 
 export type Campo = 'identificacion' | 'nombre_completo' | 'cargo' | 'nivel' | 'filial'
-  | 'fecha_horas_extras' | 'hora_inicio' | 'hora_final' | 'justificacion';
+  | 'fecha_horas_extras' | 'hora_inicio' | 'hora_final' | 'minutos_totales' | 'justificacion';
 
 export type Errores = Partial<Record<Campo, string>>;
 
@@ -46,6 +46,8 @@ export interface DiaRegistro {
   fecha_horas_extras: string;
   hora_inicio: string;
   hora_final: string;
+  /** Total de horas extras indicado; solo aplica con horario especial. */
+  minutos_extras?: number;
 }
 
 export type DatosRegistro = DatosColega & DiaRegistro;
@@ -55,6 +57,7 @@ export interface Reglas {
   festivos: Set<string>;
   finJornada: string;
   finJornadaViernes: string;
+  finJornadaSufi: string;
   topeDiarioMin: number;
   topeFinSemanaMin: number;
 }
@@ -69,8 +72,13 @@ export function topeDelDia(fecha: string, reglas: Pick<Reglas, 'festivos' | 'top
   return tipoDia(fecha, reglas.festivos) === 'habil' ? reglas.topeDiarioMin : reglas.topeFinSemanaMin;
 }
 
+/** Sufi en día hábil marca la jornada y aparte el total de horas extras. */
+export function tieneHorarioEspecial(filial: string, fecha: string, festivos: Set<string>): boolean {
+  return filial === 'Sufi' && tipoDia(fecha, festivos) === 'habil';
+}
+
 export function erroresLocales(datos: DatosRegistro, reglas: Reglas): Errores {
-  return { ...erroresColega(datos), ...erroresDia(datos, reglas) };
+  return { ...erroresColega(datos), ...erroresDia(datos, reglas, datos.filial) };
 }
 
 export function erroresColega(datos: DatosColega): Errores {
@@ -89,7 +97,7 @@ export function erroresColega(datos: DatosColega): Errores {
   return errores;
 }
 
-export function erroresDia(datos: DiaRegistro, reglas: Reglas): Errores {
+export function erroresDia(datos: DiaRegistro, reglas: Reglas, filial = ''): Errores {
   const errores: Errores = {};
 
   if (!datos.fecha_horas_extras) {
@@ -111,7 +119,19 @@ export function erroresDia(datos: DiaRegistro, reglas: Reglas): Errores {
     return errores;
   }
 
-  if (tipoDia(datos.fecha_horas_extras, reglas.festivos) === 'habil') {
+  if (tieneHorarioEspecial(filial, datos.fecha_horas_extras, reglas.festivos)) {
+    if (minutosEntre(reglas.finJornadaSufi, datos.hora_final) > 0) {
+      errores.hora_final = `En Sufi la jornada termina máximo a las ${formatoHoraAmPm(reglas.finJornadaSufi)}.`;
+    }
+    const total = datos.minutos_extras ?? 0;
+    if (!total) {
+      errores.minutos_totales = 'Seleccione el total de horas extras.';
+    } else if (total > reglas.topeDiarioMin) {
+      errores.minutos_totales = `Máximo ${formatoDuracion(reglas.topeDiarioMin)} horas en día hábil.`;
+    } else if (total > minutos) {
+      errores.minutos_totales = 'El total de horas extras no cabe dentro de la jornada.';
+    }
+  } else if (tipoDia(datos.fecha_horas_extras, reglas.festivos) === 'habil') {
     const fin = finJornadaDe(datos.fecha_horas_extras, reglas);
     if (datos.hora_inicio !== fin) {
       errores.hora_inicio = `Ese día las horas extras empiezan a las ${formatoHoraAmPm(fin)}, sin pausas.`;
