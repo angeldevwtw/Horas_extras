@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { diaDeSemana, diasDelMes, mesesPermitidos, mismoMes, nombreMes, tipoDia } from '../lib/fechas';
 
-const DIAS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+const DIAS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
 const TITULO_FIN_DE_SEMANA: Record<number, string> = {
   6: 'Sábado',
@@ -24,8 +24,8 @@ export function CalendarioMes({ hoy, festivos, seleccionadas, llenos, alElegir }
   const [mes, setMes] = useState(meses[1]);
   const dias = diasDelMes(mes);
   const fechasFestivas = new Set(festivos.keys());
-  // La semana empieza en domingo, que es el 0 de diaDeSemana.
-  const huecos = diaDeSemana(dias[0]);
+  // La semana empieza en lunes, como el tope semanal; diaDeSemana da 0 al domingo.
+  const huecos = (diaDeSemana(dias[0]) + 6) % 7;
   const elegidasEn = (m: string) => [...seleccionadas].filter((f) => mismoMes(f, m)).length;
 
   return (
