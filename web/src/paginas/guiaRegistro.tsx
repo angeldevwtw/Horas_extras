@@ -35,7 +35,8 @@ export function pasosGuiaRegistro(config: Configuracion): PasoGuia[] {
       titulo: '3. El horario',
       texto: (
         <>
-          <p>Elija las horas por día y se aplican a todos los días marcados. De lunes a jueves empiezan a
+          <p>Los días marcados se agrupan por semana (lunes a domingo). En cada semana elija las horas por
+            día y se aplican a los días de esa semana. De lunes a jueves empiezan a
             las {formatoHoraAmPm(config.finJornada)} y los viernes a
             las {formatoHoraAmPm(config.finJornadaViernes)}, justo al terminar la jornada; en sábado o
             festivo se elige la hora de inicio.</p>

@@ -19,7 +19,7 @@ export function ListaDias({ dias, festivos, finJornadaDe, topeDe, errores, alCam
   const fechasFestivas = new Set(festivos.keys());
 
   return (
-    <ul className="divide-y divide-borde rounded-lg border border-borde">
+    <ul className="divide-y divide-borde rounded-lg border border-borde bg-blanco">
       {dias.map((dia) => {
         const fecha = dia.fecha_horas_extras;
         const tipo = tipoDia(fecha, fechasFestivas);

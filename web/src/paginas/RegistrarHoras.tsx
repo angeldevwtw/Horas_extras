@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { BloqueSemana, type HorarioSemana } from '../componentes/BloqueSemana';
 import { CalendarioMes } from '../componentes/CalendarioMes';
 import { ContadorSemana } from '../componentes/ContadorSemana';
-import { ListaDias } from '../componentes/ListaDias';
 import { SelectorCargo } from '../componentes/SelectorCargo';
 import { Aviso, Boton, Campo, claseEntrada, Paso } from '../componentes/ui';
 import { diasDelMes, formatoFecha, lunesDe, mesesPermitidos, sumarDias, tipoDia } from '../lib/fechas';
@@ -24,9 +24,9 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
 }) {
   const [datos, setDatos] = useState<DatosColega>(VACIO);
   const [dias, setDias] = useState<DiaRegistro[]>([]);
-  // Horario común: se aplica a cada día al marcarlo y a todos al cambiarlo.
-  const [duracion, setDuracion] = useState(0);
-  const [inicioEspecial, setInicioEspecial] = useState('');
+  // Horario común de cada semana (por su lunes): se aplica a cada día al marcarlo y a todos
+  // los de la semana al cambiarlo.
+  const [horarios, setHorarios] = useState<Record<string, HorarioSemana>>({});
   const [tocados, setTocados] = useState<Set<NombreCampo>>(new Set());
   const [erroresServidor, setErroresServidor] = useState<{ colega: Errores; dias: Record<string, Errores> }>(
     { colega: {}, dias: {} });
@@ -42,7 +42,6 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
   const finDe = (fecha: string) => finJornadaDe(fecha, config);
   const minutosDe = (d: DiaRegistro) =>
     d.hora_inicio && d.hora_final ? Math.max(0, minutosEntre(d.hora_inicio, d.hora_final)) : 0;
-  const hayEspeciales = dias.some((d) => tipoDia(d.fecha_horas_extras, fechasFestivas) !== 'habil');
   const duraciones = Array.from({ length: Math.max(config.topeDiarioMin, config.topeFinSemanaMin) / 30 },
     (_, i) => (i + 1) * 30);
 
@@ -78,7 +77,9 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
   const identificacionValida = !locColega.identificacion;
   const totalMinutos = dias.reduce((s, d) => s + minutosDe(d), 0);
 
-  function horarioDe(fecha: string, dur = duracion, inicioSab = inicioEspecial): DiaRegistro {
+  const horarioDeSemana = (lunes: string): HorarioSemana => horarios[lunes] ?? { duracion: 0, inicio: '' };
+
+  function horarioDe(fecha: string, { duracion: dur, inicio: inicioSab } = horarioDeSemana(lunesDe(fecha))): DiaRegistro {
     const habil = tipoDia(fecha, fechasFestivas) === 'habil';
     const inicio = habil ? finDe(fecha) : inicioSab;
     const fin = inicio && dur ? minutosDelDia(inicio) + dur : 0;
@@ -111,10 +112,10 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
     setResultado(null);
   }
 
-  function aplicarATodos(dur: number, inicioSab: string) {
-    setDuracion(dur);
-    setInicioEspecial(inicioSab);
-    setDias((lista) => lista.map((d) => horarioDe(d.fecha_horas_extras, dur, inicioSab)));
+  function aplicarASemana(lunes: string, horario: HorarioSemana) {
+    setHorarios((h) => ({ ...h, [lunes]: horario }));
+    setDias((lista) => lista.map((d) =>
+      lunesDe(d.fecha_horas_extras) === lunes ? horarioDe(d.fecha_horas_extras, horario) : d));
     setResultado(null);
   }
 
@@ -204,8 +205,9 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
     const enSemana = (f: string) => f >= lunes && f <= domingo;
     let usados = 0;
     for (const [fecha, r] of registrados) if (enSemana(fecha)) usados += r.minutos;
-    const nuevos = dias.filter((d) => enSemana(d.fecha_horas_extras)).reduce((s, d) => s + minutosDe(d), 0);
-    return { lunes, domingo, usados, nuevos };
+    const delaSemana = dias.filter((d) => enSemana(d.fecha_horas_extras));
+    const nuevos = delaSemana.reduce((s, d) => s + minutosDe(d), 0);
+    return { lunes, domingo, usados, nuevos, dias: delaSemana };
   });
 
   return (
@@ -254,35 +256,21 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
             </Campo>
           </div>
           <div className="grid gap-4" data-guia="horario">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Campo etiqueta="Horas por día" htmlFor="duracion"
-                ayuda="Se aplica a todos los días; en día hábil empieza al terminar la jornada.">
-                <select id="duracion" value={duracion || ''} className={claseEntrada}
-                  onChange={(e) => aplicarATodos(Number(e.target.value), inicioEspecial)}>
-                  <option value="">Seleccione…</option>
-                  {duraciones.map((m) => <option key={m} value={m}>{formatoDuracion(m)} horas</option>)}
-                </select>
-              </Campo>
-              {hayEspeciales && (
-                <Campo etiqueta="Inicio en sábado o festivo" htmlFor="inicio-especial">
-                  <select id="inicio-especial" value={inicioEspecial} className={claseEntrada}
-                    onChange={(e) => aplicarATodos(duracion, e.target.value)}>
-                    <option value="">Seleccione…</option>
-                    {Array.from({ length: 47 }, (_, i) => horaDeMinutos(i * 30)).map((h) => (
-                      <option key={h} value={h}>{formatoHoraAmPm(h)}</option>
-                    ))}
-                  </select>
-                </Campo>
-              )}
-            </div>
             {dias.length > 0 ? (
-              <div className="grid gap-2">
+              <div className="grid gap-3">
                 <p className="text-sm font-medium">
                   {dias.length === 1 ? '1 día seleccionado' : `${dias.length} días seleccionados`}
-                  <span className="font-normal text-texto-suave"> · puede ajustar el horario de cada uno</span>
+                  <span className="font-normal text-texto-suave">
+                    {' '}· en día hábil las horas empiezan al terminar la jornada; puede ajustar cada día
+                  </span>
                 </p>
-                <ListaDias dias={dias} festivos={festivos} finJornadaDe={finDe} topeDe={topeDe}
-                  errores={erroresPorDia} alCambiar={cambiarDia} alQuitar={alternarDia} />
+                {semanas.map((s) => (
+                  <BloqueSemana key={s.lunes} lunes={s.lunes} dias={s.dias} horario={horarioDeSemana(s.lunes)}
+                    duraciones={duraciones} topeSemanalMin={config.topeSemanalMin} usadosMin={s.usados}
+                    festivos={festivos} finJornadaDe={finDe} topeDe={topeDe} errores={erroresPorDia}
+                    alCambiarHorario={(h) => aplicarASemana(s.lunes, h)} alCambiarDia={cambiarDia}
+                    alQuitar={alternarDia} />
+                ))}
               </div>
             ) : (
               <p className="rounded-lg border border-dashed border-borde px-4 py-6 text-center text-sm text-texto-suave">
