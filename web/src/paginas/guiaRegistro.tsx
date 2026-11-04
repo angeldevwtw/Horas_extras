@@ -23,7 +23,8 @@ export function pasosGuiaRegistro(config: Configuracion): PasoGuia[] {
       texto: (
         <>
           <p>Marque uno o varios días del mes anterior o del mes en curso; un segundo clic lo desmarca y
-            arriba del calendario se cambia de mes. Los fines de semana y festivos están sombreados.</p>
+            arriba del calendario se cambia de mes. Cada fila es una semana de lunes a domingo, la misma
+            con la que se cuenta el máximo semanal; los fines de semana y festivos están sombreados.</p>
           <p>Los días que el colega ya tiene registrados salen en rojo y no se pueden marcar. En un fin de
             semana se registra el sábado o, si el colega descansa el sábado, el domingo; nunca los dos. Un
             festivo solo se permite si el colega no trabajó ese fin de semana.</p>
