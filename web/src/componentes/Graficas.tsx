@@ -30,6 +30,22 @@ function sumarPor(registros: RegistroAdmin[], clave: (r: RegistroAdmin) => strin
   return totales;
 }
 
+const ALTO_MINIMO_PX = 224;
+const ALTO_MAXIMO_PX = 480;
+const PX_POR_HORA = 12;
+const SEPARACION_MINIMA_PX = 28;
+
+/** Alto de la gráfica y líneas del eje según el día con más horas, para que las etiquetas no se amontonen. */
+function escalaDelEje(minutosPico: number) {
+  // Margen sobre el pico para que el valor quepa encima de la barra; el eje muestra al menos 2 horas.
+  const horas = Math.max(2, (minutosPico * 1.08) / 60);
+  const alto = Math.min(ALTO_MAXIMO_PX, Math.max(ALTO_MINIMO_PX, horas * PX_POR_HORA));
+  const paso = [1, 2, 5, 10, 20, 50].find((p) => (p / horas) * alto >= SEPARACION_MINIMA_PX) ?? 100;
+  const techoHoras = Math.ceil(horas / paso) * paso;
+  const lineas = Array.from({ length: techoHoras / paso + 1 }, (_, i) => (techoHoras - i * paso) * 60);
+  return { alto, techo: techoHoras * 60, lineas };
+}
+
 /** Horas de cada día del mes, con fines de semana y festivos sombreados y el valor encima de cada barra. */
 export function HorasPorDia({ registros, mes, festivos }: {
   registros: RegistroAdmin[];
@@ -42,9 +58,7 @@ export function HorasPorDia({ registros, mes, festivos }: {
   const totalMes = conHoras.reduce((suma, [, t]) => suma + t.minutos, 0);
   const pico = conHoras.reduce<[string, { minutos: number }] | null>(
     (mayor, actual) => (!mayor || actual[1].minutos > mayor[1].minutos ? actual : mayor), null);
-  // El eje llega a la hora entera siguiente, con al menos 2 horas, y deja espacio para el valor encima.
-  const techo = Math.max(120, Math.ceil(((pico?.[1].minutos ?? 0) + 30) / 60) * 60);
-  const lineas = Array.from({ length: techo / 60 + 1 }, (_, i) => techo - i * 60);
+  const { alto, techo, lineas } = escalaDelEje(pico?.[1].minutos ?? 0);
 
   const datos = [
     ['Día con más horas', pico ? `${nombreCorto(pico[0])} · ${formatoHorasDecimal(pico[1].minutos)} h` : '—'],
@@ -66,10 +80,11 @@ export function HorasPorDia({ registros, mes, festivos }: {
 
       <div>
         <div className="flex gap-2">
-          <div aria-hidden className="flex h-56 w-9 shrink-0 flex-col justify-between text-right text-xs text-texto-suave">
+          <div aria-hidden style={{ height: alto }}
+            className="flex w-9 shrink-0 flex-col justify-between text-right text-xs text-texto-suave">
             {lineas.map((m) => <span key={m} className="-my-2 leading-4">{formatoHorasDecimal(m)}</span>)}
           </div>
-          <div className="relative h-56 flex-1">
+          <div className="relative flex-1" style={{ height: alto }}>
             <div aria-hidden className="absolute inset-0 flex flex-col justify-between">
               {lineas.map((m) => <div key={m} className={`border-t ${m ? 'border-dashed' : ''} border-borde`} />)}
             </div>
