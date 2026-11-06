@@ -15,7 +15,8 @@ al pie la política y las líneas de firma.
 | Solo niveles 68 (Analista - Ejecutivo), 73 (Asistentes) y 78 (Conductor) | `HE_NIVEL` |
 | Máximo 2 horas en día hábil | `HE_TOPE_DIARIO` |
 | Sábado, domingo o festivo: máximo 2 horas, a cualquier hora | `HE_TOPE_FIN_DE_SEMANA` |
-| En un fin de semana, el sábado o (si el colega descansa el sábado) el domingo, nunca los dos | `HE_DESCANSO` |
+| Domingo solo en Sufi; las demás filiales no lo registran | `HE_DOMINGO` |
+| En Sufi, el sábado o (si el colega descansa el sábado) el domingo, nunca los dos | `HE_DESCANSO` |
 | Máximo 12 horas por colega en la semana (lunes a domingo, aunque cruce de mes) | `HE_TOPE_SEMANAL` |
 | Festivo solo si el colega no trabajó ese fin de semana, ni sábado ni domingo (lunes festivo: el anterior; otro día: el de esa semana), y al revés | `HE_DESCANSO` |
 | Día hábil: inicio exactamente al terminar la jornada (5:00 PM; viernes 4:30 PM), sin pausas (no aplica a Sufi) | `HE_INICIO_JORNADA` |
@@ -38,8 +39,8 @@ registro con su propio código.
 
 Sufi tiene un horario especial en día hábil: se marca el inicio y el final de la jornada y aparte
 el total de horas extras, que es lo que cuenta para los topes y sale en el Excel. La hora límite se
-cambia en `configuracion` (`fin_jornada_sufi`). En sábado, domingo y festivo registra como las
-demás filiales.
+cambia en `configuracion` (`fin_jornada_sufi`). En sábado y festivo registra como las demás
+filiales; el domingo, que solo Sufi puede registrar, también va con hora de inicio y hasta 2:00.
 
 Los topes cuentan todo lo registrado para el colega, desde cualquier equipo. Los registros no se
 editan ni se borran: se anulan con un motivo y las horas anuladas dejan de contar.

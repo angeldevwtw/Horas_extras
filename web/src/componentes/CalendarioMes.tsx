@@ -10,14 +10,16 @@ const TITULO_FIN_DE_SEMANA: Record<number, string> = {
 
 /**
  * Mes anterior o mes en curso; cada clic marca o desmarca un día. Fines de semana y festivos van
- * resaltados; los días futuros y los que el colega ya tiene completos no se pueden marcar.
+ * resaltados; los días futuros, los que el colega ya tiene completos y los domingos fuera de Sufi
+ * no se pueden marcar.
  */
-export function CalendarioMes({ hoy, festivos, seleccionadas, llenos, alElegir }: {
+export function CalendarioMes({ hoy, festivos, seleccionadas, llenos, domingoPermitido, alElegir }: {
   hoy: string;
   festivos: Map<string, string>;
   seleccionadas: Set<string>;
   /** Fecha → códigos de los registros que ya llenan ese día. */
   llenos: Map<string, string>;
+  domingoPermitido: boolean;
   alElegir: (fecha: string) => void;
 }) {
   const meses = mesesPermitidos(hoy);
@@ -50,20 +52,25 @@ export function CalendarioMes({ hoy, festivos, seleccionadas, llenos, alElegir }
           const elegida = seleccionadas.has(fecha);
           const lleno = llenos.get(fecha);
           const futuro = fecha > hoy;
-          const bloqueado = futuro || (!!lleno && !elegida);
+          const domingoVetado = diaDeSemana(fecha) === 0 && !domingoPermitido;
+          // Marcado antes de cambiar de filial: se deja desmarcar.
+          const bloqueado = futuro || ((!!lleno || domingoVetado) && !elegida);
           const clase = elegida
-            ? `font-semibold text-blanco ${lleno ? 'bg-error' : 'bg-primario'}`
+            ? `font-semibold text-blanco ${lleno || domingoVetado ? 'bg-error' : 'bg-primario'}`
             : futuro
               ? 'cursor-not-allowed text-texto-suave opacity-40'
               : lleno
                 ? 'cursor-not-allowed bg-error-suave text-error line-through'
-                : tipo === 'habil'
-                  ? 'text-texto hover:bg-suave'
-                  : 'bg-seleccion font-medium text-secundario hover:bg-suave';
+                : domingoVetado
+                  ? 'cursor-not-allowed text-texto-suave line-through'
+                  : tipo === 'habil'
+                    ? 'text-texto hover:bg-suave'
+                    : 'bg-seleccion font-medium text-secundario hover:bg-suave';
           return (
             <button key={fecha} type="button" onClick={() => alElegir(fecha)} disabled={bloqueado}
               title={futuro ? 'Se registra después de trabajarlo'
                 : lleno ? `Ya registrado (${lleno})`
+                : domingoVetado ? 'Domingo: solo se registra en Sufi'
                 : festivos.get(fecha) ?? TITULO_FIN_DE_SEMANA[diaDeSemana(fecha)]}
               aria-pressed={elegida}
               className={`h-10 rounded-md text-sm transition-colors ${clase}
@@ -86,7 +93,7 @@ export function CalendarioMes({ hoy, festivos, seleccionadas, llenos, alElegir }
           <span aria-hidden className="size-3 rounded-sm ring-1 ring-inset ring-primario" />
           Hoy
         </li>
-        <li>Sábado o domingo, no los dos</li>
+        <li>Domingo: solo Sufi, si el colega descansa el sábado</li>
         <li><span className="opacity-40">Días futuros</span>: se registran después de trabajarlos</li>
       </ul>
     </div>

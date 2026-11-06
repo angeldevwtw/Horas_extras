@@ -1,5 +1,6 @@
 -- Sufi en día hábil: se marca la jornada, hasta las 9:00 PM, y aparte el total de horas extras.
--- Sábado, domingo y festivo siguen igual que en las demás filiales.
+-- Sábado y festivo siguen igual que en las demás filiales; el domingo, en
+-- 16_domingo_si_descansa_sabado.sql.
 select prueba.reloj('2026-11-30 08:00');
 
 select prueba.como_postgres();

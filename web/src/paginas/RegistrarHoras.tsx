@@ -6,7 +6,7 @@ import { SelectorCargo } from '../componentes/SelectorCargo';
 import { Aviso, Boton, Campo, claseEntrada, Paso } from '../componentes/ui';
 import { diaDeSemana, diasDelMes, formatoFecha, lunesDe, mesesPermitidos, sumarDias, tipoDia } from '../lib/fechas';
 import { formatoDuracion, formatoHoraAmPm, horaDeMinutos, minutosDelDia, minutosEntre } from '../lib/horas';
-import { erroresColega, erroresDia, FILIALES, finJornadaDe, NIVELES, nombrePropio, tieneHorarioEspecial, topeDelDia, type Campo as NombreCampo, type DatosColega, type DiaRegistro, type Errores } from '../lib/reglas';
+import { domingoPermitido, erroresColega, erroresDia, FILIALES, finJornadaDe, NIVELES, nombrePropio, tieneHorarioEspecial, topeDelDia, type Campo as NombreCampo, type DatosColega, type DiaRegistro, type Errores } from '../lib/reglas';
 import { mensajeDeError, supabase } from '../lib/supabase';
 import type { Configuracion, Registro } from '../lib/tipos';
 
@@ -297,6 +297,7 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
           <div data-guia="fecha">
             <Campo etiqueta="Días">
               <CalendarioMes hoy={hoy} festivos={festivos} llenos={llenos}
+                domingoPermitido={domingoPermitido(datos.filial)}
                 seleccionadas={new Set(dias.map((d) => d.fecha_horas_extras))} alElegir={alternarDia} />
             </Campo>
           </div>

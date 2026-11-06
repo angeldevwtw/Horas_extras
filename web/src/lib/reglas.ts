@@ -77,6 +77,11 @@ export function tieneHorarioEspecial(filial: string, fecha: string, festivos: Se
   return filial === 'Sufi' && tipoDia(fecha, festivos) === 'habil';
 }
 
+/** El domingo es una excepción solo de Sufi: el colega que descansa el sábado puede trabajarlo. */
+export function domingoPermitido(filial: string): boolean {
+  return filial === 'Sufi';
+}
+
 export function erroresLocales(datos: DatosRegistro, reglas: Reglas): Errores {
   return { ...erroresColega(datos), ...erroresDia(datos, reglas, datos.filial) };
 }
@@ -109,6 +114,10 @@ export function erroresDia(datos: DiaRegistro, reglas: Reglas, filial = ''): Err
     errores.fecha_horas_extras = `La fecha debe ser de ${nombreMes(anterior)} o de ${nombreMes(actual)}.`;
   } else if (datos.fecha_horas_extras > reglas.hoy) {
     errores.fecha_horas_extras = 'Las horas extras se registran después de trabajarlas: la fecha no puede ser posterior a hoy.';
+  }
+  if (diaDeSemana(datos.fecha_horas_extras) === 0 && !domingoPermitido(filial)) {
+    errores.fecha_horas_extras = 'Los domingos solo se pueden registrar horas extras en Sufi.';
+    return errores;
   }
 
   if (!datos.hora_inicio || !datos.hora_final) {
