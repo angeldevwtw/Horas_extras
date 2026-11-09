@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { erroresLocales, jefesDeLaFilial, nombrePropio, SIN_COORDINADOR, type DatosRegistro, type Reglas } from '../src/lib/reglas';
+import { erroresLocales, iniciales, jefesDeLaFilial, nombrePropio, SIN_COORDINADOR, type DatosRegistro, type Reglas } from '../src/lib/reglas';
 
 const reglas: Reglas = {
   hoy: '2026-10-15',
@@ -130,6 +130,15 @@ describe('erroresLocales', () => {
   });
   it('la justificación es obligatoria', () => {
     expect(errores({ justificacion: '  ' }).justificacion).toBeDefined();
+  });
+});
+
+describe('iniciales', () => {
+  it('toma el nombre y el primer apellido', () => {
+    expect(iniciales('Nataly Zapata Ospina')).toBe('NZ');
+    expect(iniciales('Darly Isabel Jaramillo Higuita')).toBe('DJ');
+    expect(iniciales('Karen Taborda')).toBe('KT');
+    expect(iniciales('Ronald')).toBe('R');
   });
 });
 

@@ -32,6 +32,13 @@ export function nombrePropio(texto: string): string {
     .replace(/(^|[\s'-])(\p{L})/gu, (_, antes: string, letra: string) => antes + letra.toLocaleUpperCase('es'));
 }
 
+/** Nombre y primer apellido: con tres palabras o más, el apellido es la penúltima. */
+export function iniciales(nombre: string): string {
+  const palabras = nombre.trim().split(/\s+/);
+  const apellido = palabras.length >= 3 ? palabras[palabras.length - 2] : palabras[1] ?? '';
+  return (palabras[0].charAt(0) + apellido.charAt(0)).toLocaleUpperCase('es');
+}
+
 /** Valor del desplegable de coordinador cuando el colega depende directamente de un director. */
 export const SIN_COORDINADOR = 'ninguno';
 

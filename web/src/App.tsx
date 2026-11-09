@@ -3,6 +3,7 @@ import { Guia } from './componentes/Guia';
 import { Aviso } from './componentes/ui';
 import { hoyBogota, nombreMes } from './lib/fechas';
 import { formatoHoraAmPm } from './lib/horas';
+import { iniciales } from './lib/reglas';
 import { guardarRegistros, leerRegistros } from './lib/registrosDeLaVentana';
 import { mensajeDeError, supabase } from './lib/supabase';
 import type { Configuracion, Festivo, JefeOpcion, Registro } from './lib/tipos';
@@ -52,6 +53,20 @@ export function App() {
 
   useEffect(() => { guardarRegistros(registros); }, [registros]);
 
+  // Jefe con la sesión abierta, para mostrarlo en el encabezado.
+  const [jefe, setJefe] = useState<{ nombre: string } | null>(null);
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((_evento, sesion) => {
+      if (!sesion) { setJefe(null); return; }
+      // Fuera del callback: supabase-js no admite otra llamada a la API dentro de él.
+      setTimeout(async () => {
+        const { data: perfil } = await supabase.rpc('mi_perfil');
+        setJefe(perfil ?? null);
+      });
+    });
+    return () => data.subscription.unsubscribe();
+  }, []);
+
   // La decisión del jefe llega desde la base: al abrir la página y al volver a la pestaña.
   useEffect(() => {
     async function actualizarEstados() {
@@ -88,11 +103,11 @@ export function App() {
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
           <div className="flex items-center gap-3">
             <span aria-hidden className="grid size-9 place-items-center rounded-lg bg-primario text-sm font-bold text-blanco">
-              HE
+              {jefe ? iniciales(jefe.nombre) : 'HE'}
             </span>
             <div className="leading-tight">
               <p className="text-sm font-semibold">Horas extras</p>
-              <p className="text-xs text-texto-suave">Cuenta Bancolombia</p>
+              <p className="text-xs text-texto-suave">{jefe ? jefe.nombre : 'Cuenta Bancolombia'}</p>
             </div>
           </div>
           <nav className="flex items-center gap-3 text-sm">
