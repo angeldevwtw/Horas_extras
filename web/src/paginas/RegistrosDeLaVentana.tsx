@@ -1,20 +1,16 @@
 import { useState } from 'react';
 import { Aviso, Boton, claseEntrada, InsigniaEstado, Tarjeta } from '../componentes/ui';
-import { descargarFormato } from '../exportar/formatoServicesCentral';
 import { formatoFecha, NOMBRE_TIPO_DIA } from '../lib/fechas';
 import { formatoDuracion, formatoHoraAmPm } from '../lib/horas';
 import { mensajeDeError, supabase } from '../lib/supabase';
 import type { Registro } from '../lib/tipos';
 
-export function RegistrosDeLaVentana({ registros, hoy, alAnular }: {
+export function RegistrosDeLaVentana({ registros, alAnular }: {
   registros: Registro[];
-  hoy: string;
   alAnular: (id: number) => void;
 }) {
   const [anulando, setAnulando] = useState<{ id: number; motivo: string } | null>(null);
   const [error, setError] = useState('');
-
-  const vigentes = registros.filter((r) => r.estado === 'registrada');
 
   async function confirmarAnulacion(registro: Registro) {
     if (!anulando) return;
@@ -31,13 +27,7 @@ export function RegistrosDeLaVentana({ registros, hoy, alAnular }: {
     <Tarjeta
       titulo="Registrado en esta ventana"
       guia="ventana"
-      descripcion="Esta lista se borra al cerrar la pestaña. Lo registrado sí queda guardado, cuenta para los topes y sale en el Excel del mes, en Administración."
-      acciones={(
-        <Boton disabled={!vigentes.length}
-          onClick={() => descargarFormato(vigentes, `horas-extras-${hoy}.xlsx`)}>
-          Descargar Excel ({vigentes.length})
-        </Boton>
-      )}>
+      descripcion="Esta lista se borra al cerrar la pestaña. Lo registrado sí queda guardado y cuenta para los topes; queda pendiente hasta que su coordinador o director lo apruebe o lo niegue. El Excel lo descargan ellos con lo aprobado.">
       {error && <div className="mb-3"><Aviso tipo="error">{error}</Aviso></div>}
 
       {!registros.length ? (
@@ -78,7 +68,7 @@ export function RegistrosDeLaVentana({ registros, hoy, alAnular }: {
                     {formatoHoraAmPm(r.hora_inicio)} – {formatoHoraAmPm(r.hora_final)}
                   </td>
                   <td className="px-3 py-2.5">{formatoDuracion(r.minutos_totales)}</td>
-                  <td className="px-3 py-2.5"><InsigniaEstado estado={r.estado} /></td>
+                  <td className="px-3 py-2.5"><InsigniaEstado estado={r.estado} aprobacion={r.aprobacion} /></td>
                   <td className="px-3 py-2.5">
                     {r.estado === 'registrada' && anulando?.id !== r.id && (
                       <Boton variante="peligro" className="px-2 py-1"

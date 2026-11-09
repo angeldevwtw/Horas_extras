@@ -4,7 +4,7 @@ select prueba.reloj('2026-11-30 08:00');
 create function prueba.varios(p_identificacion text, p_dias jsonb, p_nivel integer default 68)
 returns setof bigint language sql as $$
   insert into prueba.claves (id, clave)
-  select id, clave_anulacion from public.registrar_varios(p_identificacion,
+  select id, clave_anulacion from prueba.registrar_varios(p_identificacion,
     'Colega ' || p_identificacion, 'Cargo de prueba', p_nivel, 'Banco', p_dias,
     'Cierre de proceso de prueba')
   returning id

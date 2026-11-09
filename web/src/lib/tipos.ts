@@ -16,7 +16,33 @@ export interface Registro {
   minutos_totales: number;
   tipo_dia: TipoDia;
   justificacion: string;
-  estado: 'registrada' | 'anulada';
+  estado: Estado;
+  aprobacion: Aprobacion;
+}
+
+export type Estado = 'registrada' | 'anulada' | 'negada';
+export type Aprobacion = 'pendiente' | 'aprobada' | 'negada';
+export type RolJefe = 'director' | 'coordinador';
+
+/** Opción de los desplegables del formulario. */
+export interface JefeOpcion {
+  id: string;
+  nombre: string;
+  rol: RolJefe;
+  director: string | null;
+  filial: string | null;
+}
+
+/** Fila de la lista de jefes en la administración. */
+export interface JefeAdmin {
+  id: string;
+  nombre: string;
+  correo: string;
+  rol: RolJefe;
+  director_id: string | null;
+  filial: string | null;
+  activo: boolean;
+  tiene_cuenta: boolean;
 }
 
 /** Lo que necesita una fila del Excel; la descarga consolidada no trae id ni clave. */
@@ -24,9 +50,13 @@ export type FilaFormato = Pick<Registro, 'identificacion' | 'nombre_completo' | 
   | 'filial' | 'fecha_horas_extras' | 'hora_inicio' | 'hora_final' | 'minutos_totales'
   | 'justificacion'>;
 
-/** Fila de la página de administración: incluye los anulados. */
-export type RegistroAdmin = FilaFormato & Pick<Registro, 'codigo' | 'tipo_dia' | 'estado'> & {
+/** Fila de administración y de "Mi equipo": incluye los anulados y los negados. */
+export type RegistroAdmin = FilaFormato & Pick<Registro, 'codigo' | 'tipo_dia' | 'estado' | 'aprobacion'> & {
   motivo_anulacion: string | null;
+  motivo_decision: string | null;
+  coordinador: string | null;
+  director: string | null;
+  decidido_por: string | null;
 };
 
 export interface Configuracion {

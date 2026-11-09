@@ -4,9 +4,19 @@ Página web para diligenciar las horas extras de los colegas y descargar el form
 se adjunta al ticket de Services Central. Reemplaza el Excel llenado a mano: la base de datos no
 deja guardar un registro que incumpla las reglas, ni siquiera llamando a la API directamente.
 
-No tiene login: quien abre la página llena el formulario, guarda y descarga el Excel. La
-aprobación de jefe inmediato, VP y RRHH se sigue haciendo por fuera, en el ticket; el Excel lleva
-al pie la política y las líneas de firma.
+Los empleados no tienen login: quien abre la página llena el formulario, elige a su coordinador
+(o "Ninguno" y su director) y guarda; el registro queda pendiente. Hay tres niveles con acceso:
+
+| Rol | Entra con | Ve | Puede |
+|---|---|---|---|
+| Coordinador | Su cuenta, en "Mi equipo" (`#equipo`) | Lo de su equipo | Aprobar, negar y bajar el Excel de lo aprobado |
+| Director | Su cuenta, en "Mi equipo" (`#equipo`) | Lo de sus coordinadores y de quienes lo eligieron directamente | Lo mismo que el coordinador, agregar o desactivar sus coordinadores y asignar su filial y la de ellos |
+| Super admin | Clave, en "Administración" (`#admin`) | Todo, de todas las filiales | Anular, bajar el Excel de lo aprobado y mantener la lista de jefes; no aprueba |
+
+Vale la primera decisión. Un registro pendiente cuenta para los topes; uno negado libera sus horas.
+El Excel solo lleva lo aprobado. Las firmas de VP y RRHH se siguen haciendo por fuera, en el ticket;
+el Excel lleva al pie la política y las líneas de firma. Lo registrado antes de esta aprobación
+quedó aprobado y sin jefe, así que solo lo ve el super admin.
 
 ## Reglas que valida la base
 
@@ -29,6 +39,8 @@ al pie la política y las líneas de firma.
 | Sin horarios cruzados el mismo día | `HE_SOLAPAMIENTO` |
 | Horas en punto o y media (sin 15 ni 45 minutos) | restricción `registros_media_hora` |
 | Justificación obligatoria | `HE_JUSTIFICACION` |
+| Coordinador activo o, con "Ninguno", director activo, de la filial del registro (o sin filial) | `HE_JEFE` |
+| Decidir solo lo de su línea y solo si sigue pendiente | `HE_SIN_PERMISO`, `HE_YA_DECIDIDO` |
 | Filial: Banco, Sufi, Leasing o Empleados | `HE_FILIAL` |
 
 Se pueden registrar varios días a la vez para un mismo colega (`registrar_varios`): cada día
@@ -115,9 +127,23 @@ npm run dev
 - Settings → Deployment Protection: desactivar *Vercel Authentication* en producción, o la
   página pedirá iniciar sesión en Vercel.
 
+## Directores y coordinadores
+
+1. En Authentication → Providers → Email (o Sign In / Providers, según la versión del panel):
+   **desactivar "Allow new users to sign up"**. Las cuentas las crea solo el administrador. Es
+   necesario: si cualquiera pudiera crear una cuenta autoconfirmada con el correo de un jefe,
+   entraría con su rol.
+2. En "Administración" → "Directores y coordinadores": agregar los directores. Los coordinadores
+   los agrega ahí el administrador o cada director en "Mi equipo", solo para su propia línea. Con
+   filial, el jefe sale en el formulario solo para esa; con "Todas las filiales", para todas.
+   Mientras no haya jefes activos, nadie puede registrar horas.
+3. En Authentication → Users → Add user: crear cada cuenta con el mismo correo, una contraseña y
+   "Auto Confirm User". La lista muestra "Creada" cuando ya existe. Las contraseñas se cambian ahí.
+
 ## Administración (panel de Supabase)
 
-Desde la página no se puede leer nada de lo guardado. En el panel de Supabase:
+Quien no tenga la clave de administración o una cuenta de jefe no puede leer nada de lo guardado.
+En el panel de Supabase:
 
 - **Definir o cambiar la clave de administración** (SQL Editor; mínimo 12 caracteres).
   Mientras no se defina, la página de administración no funciona. Solo se guarda su hash:
@@ -138,10 +164,10 @@ Desde la página no se puede leer nada de lo guardado. En el panel de Supabase:
 
 ```bash
 npm install          # en la raíz, una sola vez
-npm run test:sql     # reglas y permisos en la base (117 pruebas)
+npm run test:sql     # reglas y permisos en la base
 
 cd web
-npm test             # minutos, tipo de día, formato H:MM y el Excel (36 pruebas)
+npm test             # minutos, tipo de día, formato H:MM y el Excel
 ```
 
 Las pruebas SQL levantan un Postgres en memoria (PGlite) con lo mínimo de Supabase
@@ -154,10 +180,12 @@ el trigger toma un `pg_advisory_xact_lock` por colega antes de sumar las horas.
 
 ## Datos personales
 
-Las cédulas son datos personales (Ley 1581 de 2012). Como la página no tiene login:
+Las cédulas son datos personales (Ley 1581 de 2012). Como los empleados no tienen login:
 
 - Desde la API no se pueden leer registros ni colegas; solo registrar, revisar reglas, ver el total
   de horas de la semana de una cédula, anular con la clave que se entregó al registrar y, con la
-  clave de administración, ver y anular los registros del mes y bajar su Excel.
+  clave de administración, ver y anular los registros del mes y bajar su Excel. Un jefe con su
+  cuenta solo lee los registros de su línea.
+- Los nombres de los jefes activos son públicos para llenar los desplegables; sus correos no.
 - Cualquiera con la dirección puede registrar; conviene compartirla solo internamente.
 - El archivo descargado se llama `horas-extras-AAAA-MM-DD.xlsx`, sin datos del colega.

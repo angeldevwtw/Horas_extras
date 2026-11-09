@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { GestionJefes } from '../componentes/GestionJefes';
 import { ColegasConMasHoras, HorasPorDia, HorasPorFilial } from '../componentes/Graficas';
 import { Aviso, Boton, Campo, claseEntrada, InsigniaEstado, Tarjeta } from '../componentes/ui';
 import { descargarFormato } from '../exportar/formatoServicesCentral';
@@ -65,7 +66,7 @@ export function Administracion({ hoy, festivos }: { hoy: string; festivos: Set<s
   }
 
   return (
-    <PanelAdministracion mes={mes} hoy={hoy} festivos={festivos} registros={registros} aviso={aviso}
+    <PanelAdministracion clave={clave} mes={mes} hoy={hoy} festivos={festivos} registros={registros} aviso={aviso}
       alCambiarMes={async (nuevo) => { setMes(nuevo); setAviso(null); await cargar(clave, nuevo); }}
       alAnular={async (codigo, motivo) => {
         const respuesta = await llamar('anular_con_clave', { p_clave: clave, p_codigo: codigo, p_motivo: motivo });
@@ -78,7 +79,8 @@ export function Administracion({ hoy, festivos }: { hoy: string; festivos: Set<s
   );
 }
 
-function PanelAdministracion({ mes, hoy, festivos, registros, aviso, alCambiarMes, alAnular, alSalir }: {
+function PanelAdministracion({ clave, mes, hoy, festivos, registros, aviso, alCambiarMes, alAnular, alSalir }: {
+  clave: string;
   mes: string;
   hoy: string;
   festivos: Set<string>;
@@ -93,6 +95,7 @@ function PanelAdministracion({ mes, hoy, festivos, registros, aviso, alCambiarMe
   const [trabajando, setTrabajando] = useState(false);
 
   const vigentes = registros.filter((r) => r.estado === 'registrada');
+  const aprobados = vigentes.filter((r) => r.aprobacion === 'aprobada');
   const minutosVigentes = vigentes.reduce((suma, r) => suma + r.minutos_totales, 0);
   const texto = busqueda.trim().toLowerCase();
   const visibles = texto
@@ -119,19 +122,20 @@ function PanelAdministracion({ mes, hoy, festivos, registros, aviso, alCambiarMe
             <input id="mes-admin" type="month" value={mes} max={hoy.slice(0, 7)} className={claseEntrada}
               onChange={(e) => e.target.value && alCambiarMes(e.target.value)} />
           </Campo>
-          <Boton disabled={!vigentes.length}
-            onClick={() => descargarFormato(vigentes, `horas-extras-consolidado-${mes}.xlsx`)}>
-            Descargar Excel ({vigentes.length})
+          <Boton disabled={!aprobados.length}
+            onClick={() => descargarFormato(aprobados, `horas-extras-consolidado-${mes}.xlsx`)}>
+            Descargar Excel ({aprobados.length} aprobados)
           </Boton>
           <Boton variante="borde" onClick={alSalir}>Salir</Boton>
         </div>
       </div>
 
-      <dl className="grid gap-4 sm:grid-cols-3">
+      <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
           ['Registros vigentes', String(vigentes.length)],
+          ['Pendientes de aprobar', String(vigentes.length - aprobados.length)],
           ['Horas extras del mes', formatoTotalHoras(minutosVigentes)],
-          ['Anulados', String(registros.length - vigentes.length)],
+          ['Anulados o negados', String(registros.length - vigentes.length)],
         ].map(([nombre, valor]) => (
           <div key={nombre} className="rounded-xl border border-borde bg-blanco p-5 shadow-xs">
             <dt className="text-xs font-medium uppercase tracking-wide text-texto-suave">{nombre}</dt>
@@ -178,6 +182,7 @@ function PanelAdministracion({ mes, hoy, festivos, registros, aviso, alCambiarMe
                   <th className="px-3 py-2.5">Colega</th>
                   <th className="px-3 py-2.5">Cargo / nivel</th>
                   <th className="px-3 py-2.5">Filial</th>
+                  <th className="px-3 py-2.5">A cargo de</th>
                   <th className="px-3 py-2.5">Horario</th>
                   <th className="px-3 py-2.5">Total</th>
                   <th className="px-3 py-2.5">Estado</th>
@@ -198,14 +203,21 @@ function PanelAdministracion({ mes, hoy, festivos, registros, aviso, alCambiarMe
                     </td>
                     <td className="px-3 py-2.5">{r.cargo}<div className="text-xs text-texto-suave">Nivel {r.nivel}</div></td>
                     <td className="px-3 py-2.5">{r.filial}</td>
+                    <td className="px-3 py-2.5">
+                      {r.coordinador ?? r.director ?? '—'}
+                      {r.coordinador && <div className="text-xs text-texto-suave">{r.director}</div>}
+                    </td>
                     <td className="px-3 py-2.5 whitespace-nowrap">
                       {formatoHoraAmPm(r.hora_inicio)} – {formatoHoraAmPm(r.hora_final)}
                     </td>
                     <td className="px-3 py-2.5">{formatoDuracion(r.minutos_totales)}</td>
                     <td className="px-3 py-2.5">
-                      <InsigniaEstado estado={r.estado} />
-                      {r.motivo_anulacion && (
-                        <div className="mt-1 max-w-48 text-xs text-texto-suave">{r.motivo_anulacion}</div>
+                      <InsigniaEstado estado={r.estado} aprobacion={r.aprobacion} />
+                      {(r.motivo_anulacion ?? r.motivo_decision) && (
+                        <div className="mt-1 max-w-48 text-xs text-texto-suave">{r.motivo_anulacion ?? r.motivo_decision}</div>
+                      )}
+                      {r.decidido_por && (
+                        <div className="mt-1 max-w-48 text-xs text-texto-suave">Por {r.decidido_por}</div>
                       )}
                     </td>
                     <td className="px-3 py-2.5">
@@ -242,6 +254,8 @@ function PanelAdministracion({ mes, hoy, festivos, registros, aviso, alCambiarMe
           </div>
         )}
       </Tarjeta>
+
+      <GestionJefes clave={clave} />
     </div>
   );
 }

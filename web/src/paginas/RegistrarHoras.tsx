@@ -6,21 +6,23 @@ import { SelectorCargo } from '../componentes/SelectorCargo';
 import { Aviso, Boton, Campo, claseEntrada, Paso } from '../componentes/ui';
 import { diaDeSemana, diasDelMes, formatoFecha, lunesDe, mesesPermitidos, sumarDias, tipoDia } from '../lib/fechas';
 import { formatoDuracion, formatoHoraAmPm, horaDeMinutos, minutosDelDia, minutosEntre } from '../lib/horas';
-import { domingoPermitido, erroresColega, erroresDia, FILIALES, finJornadaDe, NIVELES, nombrePropio, tieneHorarioEspecial, topeDelDia, type Campo as NombreCampo, type DatosColega, type DiaRegistro, type Errores } from '../lib/reglas';
+import { domingoPermitido, erroresColega, erroresDia, FILIALES, finJornadaDe, jefesDeLaFilial, NIVELES, nombrePropio, SIN_COORDINADOR, tieneHorarioEspecial, topeDelDia, type Campo as NombreCampo, type DatosColega, type DiaRegistro, type Errores } from '../lib/reglas';
 import { mensajeDeError, supabase } from '../lib/supabase';
-import type { Configuracion, Registro } from '../lib/tipos';
+import type { Configuracion, JefeOpcion, Registro } from '../lib/tipos';
 
 const VACIO: DatosColega = {
-  identificacion: '', nombre_completo: '', cargo: '', nivel: null, filial: '', justificacion: '',
+  identificacion: '', nombre_completo: '', cargo: '', nivel: null, filial: '', coordinador: '',
+  director: '', justificacion: '',
 };
 
 const DIAS_SEMANA = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
-export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
+export function RegistrarHoras({ hoy, config, festivos, jefes, alRegistrar }: {
   hoy: string;
   alRegistrar: (registro: Registro) => void;
   config: Configuracion;
   festivos: Map<string, string>;
+  jefes: JefeOpcion[];
 }) {
   const [datos, setDatos] = useState<DatosColega>(VACIO);
   const [dias, setDias] = useState<DiaRegistro[]>([]);
@@ -38,6 +40,13 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
   const [version, setVersion] = useState(0);
   const [guardando, setGuardando] = useState(false);
   const [resultado, setResultado] = useState<{ tipo: 'error' | 'exito'; texto: string } | null>(null);
+
+  const jefesFilial = jefesDeLaFilial(jefes, datos.filial);
+  const coordinadores = jefesFilial.filter((j) => j.rol === 'coordinador');
+  const directores = jefesFilial.filter((j) => j.rol === 'director');
+  const textoSinFilial = datos.filial ? 'Seleccione…' : 'Primero elija la filial';
+  const sinCoordinador = datos.coordinador === SIN_COORDINADOR;
+  const coordinadorElegido = coordinadores.find((c) => c.id === datos.coordinador);
 
   const fechasFestivas = useMemo(() => new Set(festivos.keys()), [festivos]);
   const reglas = { hoy, festivos: fechasFestivas, ...config };
@@ -122,6 +131,12 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
   // El horario de Sufi se marca distinto: los días elegidos se arman de nuevo con la filial nueva.
   function cambiarFilial(filial: string) {
     cambiar('filial', filial);
+    const sigue = (id: string) => jefesDeLaFilial(jefes, filial).some((j) => j.id === id);
+    setDatos((d) => ({
+      ...d,
+      coordinador: d.coordinador === SIN_COORDINADOR || sigue(d.coordinador) ? d.coordinador : '',
+      director: sigue(d.director) ? d.director : '',
+    }));
     setDias((lista) => lista.map((d) =>
       horarioDe(d.fecha_horas_extras, horarioDeSemana(lunesDe(d.fecha_horas_extras)), filial)));
   }
@@ -207,14 +222,16 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
       p_filial: datos.filial,
       p_dias: dias.map(aParametro),
       p_justificacion: datos.justificacion,
+      p_coordinador: sinCoordinador ? null : datos.coordinador,
+      p_director: sinCoordinador ? datos.director : null,
     });
     setGuardando(false);
     if (error) {
       setResultado({ tipo: 'error', texto: `No se guardó ningún día. ${mensajeDeError(error)}` });
       return;
     }
-    const nuevos = data as Omit<Registro, 'estado'>[];
-    for (const r of nuevos) alRegistrar({ ...r, estado: 'registrada' });
+    const nuevos = data as Omit<Registro, 'estado' | 'aprobacion'>[];
+    for (const r of nuevos) alRegistrar({ ...r, estado: 'registrada', aprobacion: 'pendiente' });
     const [primero] = nuevos;
     setResultado({
       tipo: 'exito',
@@ -228,7 +245,7 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
     setDatos((d) => ({ ...d, justificacion: '' }));
     setDias([]);
     setJustificaciones({});
-    setTocados(new Set(['identificacion', 'nombre_completo', 'cargo', 'nivel', 'filial']));
+    setTocados(new Set(['identificacion', 'nombre_completo', 'cargo', 'nivel', 'filial', 'coordinador', 'director']));
     setVersion((v) => v + 1);
   }
 
@@ -289,6 +306,27 @@ export function RegistrarHoras({ hoy, config, festivos, alRegistrar }: {
                 {FILIALES.map((f) => <option key={f}>{f}</option>)}
               </select>
             </Campo>
+            <Campo etiqueta="Coordinador" htmlFor="coordinador" error={errorVisible('coordinador')}
+              ayuda={coordinadorElegido?.director ? `Director: ${coordinadorElegido.director}` : undefined}>
+              <select id="coordinador" value={datos.coordinador} disabled={!datos.filial} aria-invalid={!!errorVisible('coordinador')}
+                onChange={(e) => {
+                  cambiar('coordinador', e.target.value);
+                  setDatos((d) => ({ ...d, director: '' }));
+                }} className={claseEntrada}>
+                <option value="">{textoSinFilial}</option>
+                {coordinadores.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                <option value={SIN_COORDINADOR}>Ninguno</option>
+              </select>
+            </Campo>
+            {sinCoordinador && (
+              <Campo etiqueta="Director" htmlFor="director" error={errorVisible('director')}>
+                <select id="director" value={datos.director} aria-invalid={!!errorVisible('director')}
+                  onChange={(e) => cambiar('director', e.target.value)} className={claseEntrada}>
+                  <option value="">Seleccione…</option>
+                  {directores.map((d) => <option key={d.id} value={d.id}>{d.nombre}</option>)}
+                </select>
+              </Campo>
+            )}
           </div>
         </Paso>
 

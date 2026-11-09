@@ -23,8 +23,13 @@ select prueba.anular((select id from prueba.claves order by id desc limit 1));
 select prueba.reloj('2026-11-03 08:00');
 select prueba.anonimo();
 select prueba.reg('1104', '2026-11-03', '17:00', '18:00');
+select prueba.como_postgres();
+select prueba.aprobar_pendientes();
+select prueba.reloj('2026-11-03 08:30');
+select prueba.anonimo();
+select prueba.reg('1105', '2026-11-03', '17:00', '18:00');
 
-select prueba.ok('Con la clave correcta trae los registros del mes, sin los anulados ni otros meses',
+select prueba.ok('Con la clave correcta trae lo aprobado del mes, sin anulados, pendientes ni otros meses',
   (select d ->> 'ok' = 'true'
       and jsonb_array_length(d -> 'registros') = 2
       and d -> 'registros' -> 0 ->> 'identificacion' = '1101'

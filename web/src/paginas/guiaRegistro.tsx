@@ -14,6 +14,8 @@ export function pasosGuiaRegistro(config: Configuracion): PasoGuia[] {
             mayúscula inicial.</p>
           <p>Elija el cargo (si no está en la lista, use <strong>Otro</strong> y escríbalo), el nivel y la
             filial. Solo los niveles 68, 73 y 78 pueden registrar horas extras.</p>
+          <p>Elija su coordinador. Si no tiene, marque <strong>Ninguno</strong> y elija su director: ellos
+            aprueban o niegan el registro.</p>
         </>
       ),
     },
@@ -78,9 +80,9 @@ export function pasosGuiaRegistro(config: Configuracion): PasoGuia[] {
       titulo: '6. Lo registrado y cómo anular',
       texto: (
         <>
-          <p>Lo que guarde aparece aquí. Desde esta lista puede descargar el Excel y{' '}
-            <strong>anular</strong> un registro con su motivo. Los registros no se editan: si hay un error, se
-            anula y se registra de nuevo.</p>
+          <p>Lo que guarde aparece aquí como pendiente, hasta que su coordinador o director lo apruebe o lo
+            niegue. Desde esta lista puede <strong>anular</strong> un registro pendiente con su motivo. Los
+            registros no se editan: si hay un error, se anula y se registra de nuevo.</p>
           <p className="rounded-md bg-error-suave px-3 py-2 text-error">
             <strong>Importante:</strong> al cerrar la pestaña esta lista se borra y ya no podrá anular. Desde
             ese momento solo el administrador puede anular el registro.

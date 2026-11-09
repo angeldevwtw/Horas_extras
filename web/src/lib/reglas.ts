@@ -22,14 +22,21 @@ export const CARGOS = [
 
 export const FILIALES = ['Banco', 'Sufi', 'Leasing', 'Empleados'] as const;
 
+/** Un jefe sin filial sirve para todas. */
+export const jefesDeLaFilial = <T extends { filial: string | null }>(jefes: T[], filial: string) =>
+  jefes.filter((j) => j.filial === null || j.filial === filial);
+
 /** "angel francisco ramos CASTILLO" -> "Angel Francisco Ramos Castillo". */
 export function nombrePropio(texto: string): string {
   return texto.toLocaleLowerCase('es')
     .replace(/(^|[\s'-])(\p{L})/gu, (_, antes: string, letra: string) => antes + letra.toLocaleUpperCase('es'));
 }
 
+/** Valor del desplegable de coordinador cuando el colega depende directamente de un director. */
+export const SIN_COORDINADOR = 'ninguno';
+
 export type Campo = 'identificacion' | 'nombre_completo' | 'cargo' | 'nivel' | 'filial'
-  | 'fecha_horas_extras' | 'hora_inicio' | 'hora_final' | 'minutos_totales' | 'justificacion';
+  | 'coordinador' | 'director' | 'fecha_horas_extras' | 'hora_inicio' | 'hora_final' | 'minutos_totales' | 'justificacion';
 
 export type Errores = Partial<Record<Campo, string>>;
 
@@ -39,6 +46,10 @@ export interface DatosColega {
   cargo: string;
   nivel: number | null;
   filial: string;
+  /** Id del coordinador o SIN_COORDINADOR. */
+  coordinador: string;
+  /** Id del director; solo aplica con SIN_COORDINADOR. */
+  director: string;
   justificacion: string;
 }
 
@@ -98,6 +109,8 @@ export function erroresColega(datos: DatosColega): Errores {
   if (!NIVELES.some((n) => n.valor === datos.nivel)) {
     errores.nivel = 'Solo niveles 68, 73 o 78.';
   }
+  if (!datos.coordinador) errores.coordinador = 'Seleccione su coordinador, o Ninguno.';
+  if (datos.coordinador === SIN_COORDINADOR && !datos.director) errores.director = 'Seleccione su director.';
   if (!datos.justificacion.trim()) errores.justificacion = 'La justificación es obligatoria.';
   return errores;
 }

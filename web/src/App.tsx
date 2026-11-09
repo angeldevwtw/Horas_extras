@@ -5,21 +5,24 @@ import { hoyBogota, nombreMes } from './lib/fechas';
 import { formatoHoraAmPm } from './lib/horas';
 import { guardarRegistros, leerRegistros } from './lib/registrosDeLaVentana';
 import { mensajeDeError, supabase } from './lib/supabase';
-import type { Configuracion, Festivo, Registro } from './lib/tipos';
+import type { Configuracion, Festivo, JefeOpcion, Registro } from './lib/tipos';
 import { Administracion } from './paginas/Administracion';
 import { pasosGuiaRegistro } from './paginas/guiaRegistro';
+import { MiEquipo } from './paginas/MiEquipo';
 import { RegistrarHoras } from './paginas/RegistrarHoras';
 import { RegistrosDeLaVentana } from './paginas/RegistrosDeLaVentana';
 
-interface DatosBase { config: Configuracion; festivos: Map<string, string> }
+interface DatosBase { config: Configuracion; festivos: Map<string, string>; jefes: JefeOpcion[] }
 
 async function leerDatosBase(): Promise<DatosBase> {
-  const [config, festivos] = await Promise.all([
+  const [config, festivos, jefes] = await Promise.all([
     supabase.from('configuracion').select('clave, valor').returns<{ clave: string; valor: string }[]>(),
     supabase.from('festivos').select('fecha, nombre').returns<Festivo[]>(),
+    supabase.rpc('jefes_formulario'),
   ]);
   if (config.error) throw new Error(mensajeDeError(config.error));
   if (festivos.error) throw new Error(mensajeDeError(festivos.error));
+  if (jefes.error) throw new Error(mensajeDeError(jefes.error));
   const valor = (clave: string) => config.data.find((c) => c.clave === clave)?.valor ?? '';
   return {
     config: {
@@ -31,8 +34,11 @@ async function leerDatosBase(): Promise<DatosBase> {
       topeSemanalMin: Number(valor('tope_semanal_min')),
     },
     festivos: new Map(festivos.data.map((f) => [f.fecha, f.nombre])),
+    jefes: jefes.data as JefeOpcion[],
   };
 }
+
+const vistaDeLaDireccion = () => (location.hash === '#admin' ? 'admin' : location.hash === '#equipo' ? 'equipo' : 'registro');
 
 export function App() {
   const [datosBase, setDatosBase] = useState<DatosBase | null>(null);
@@ -46,11 +52,11 @@ export function App() {
 
   useEffect(() => { guardarRegistros(registros); }, [registros]);
 
-  // Sin router: #admin abre la administración y cualquier otra dirección, el registro.
-  const [enAdmin, setEnAdmin] = useState(() => location.hash === '#admin');
+  // Sin router: #admin abre la administración, #equipo la de los jefes y cualquier otra, el registro.
+  const [vista, setVista] = useState(vistaDeLaDireccion);
   const [conGuia, setConGuia] = useState(false);
   useEffect(() => {
-    const alCambiar = () => setEnAdmin(location.hash === '#admin');
+    const alCambiar = () => setVista(vistaDeLaDireccion());
     window.addEventListener('hashchange', alCambiar);
     return () => window.removeEventListener('hashchange', alCambiar);
   }, []);
@@ -72,7 +78,7 @@ export function App() {
             <span className="hidden rounded-full bg-suave px-3 py-1 text-xs font-medium text-primario first-letter:uppercase sm:inline">
               {nombreMes(hoy)}
             </span>
-            {!enAdmin && datosBase && (
+            {vista === 'registro' && datosBase && (
               <button type="button" onClick={() => setConGuia(true)} aria-label="Ayuda: cómo funciona la página"
                 className="flex items-center gap-2 rounded-md border border-borde bg-blanco px-3 py-2 text-sm
                   font-semibold text-primario transition-colors hover:bg-suave">
@@ -81,16 +87,28 @@ export function App() {
                 Ayuda
               </button>
             )}
-            <a href={enAdmin ? '#' : '#admin'}
-              className="rounded-md bg-primario px-4 py-2 text-sm font-semibold text-blanco transition-colors hover:bg-primario-hover">
-              {enAdmin ? '← Volver al registro' : 'Administración'}
-            </a>
+            {vista !== 'registro' ? (
+              <a href="#" className="rounded-md bg-primario px-4 py-2 text-sm font-semibold text-blanco transition-colors hover:bg-primario-hover">
+                ← Volver al registro
+              </a>
+            ) : (
+              <>
+                <a href="#equipo" className="rounded-md border border-borde bg-blanco px-4 py-2 text-sm font-semibold text-primario transition-colors hover:bg-suave">
+                  Mi equipo
+                </a>
+                <a href="#admin" className="rounded-md bg-primario px-4 py-2 text-sm font-semibold text-blanco transition-colors hover:bg-primario-hover">
+                  Administración
+                </a>
+              </>
+            )}
           </nav>
         </div>
       </header>
 
       <main className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-8">
-        {enAdmin ? <Administracion hoy={hoy} festivos={new Set(datosBase?.festivos.keys())} /> : (
+        {vista === 'admin' && <Administracion hoy={hoy} festivos={new Set(datosBase?.festivos.keys())} />}
+        {vista === 'equipo' && <MiEquipo hoy={hoy} />}
+        {vista === 'registro' && (
           <>
             <div>
               <h1 className="text-2xl font-semibold tracking-tight">Registrar horas extras</h1>
@@ -101,7 +119,7 @@ export function App() {
               <RegistrarHoras hoy={hoy} {...datosBase}
                 alRegistrar={(nuevo) => setRegistros((lista) => [...lista, nuevo])} />
             )}
-            <RegistrosDeLaVentana registros={registros} hoy={hoy}
+            <RegistrosDeLaVentana registros={registros}
               alAnular={(id) => setRegistros((lista) =>
                 lista.map((r) => (r.id === id ? { ...r, estado: 'anulada' } : r)))} />
           </>

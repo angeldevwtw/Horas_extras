@@ -5,9 +5,9 @@ select prueba.anonimo();
 select prueba.ok('registrar_horas devuelve el registro listo para el Excel',
   (select codigo ~ '^HE-\d{5}$' and identificacion = '9001' and nombre_completo = 'Colega Nueve'
      and minutos_totales = 60 and tipo_dia = 'habil' and clave_anulacion is not null
-   from public.registrar_horas(' 9001 ', 'Colega  Nueve ', 'Asistente', 73, 'Banco',
+   from prueba.registrar_horas(' 9001 ', 'Colega  Nueve ', 'Asistente', 73, 'Banco',
      '2026-10-05', '17:00', '18:00', 'Primera justificación')));
-select public.registrar_horas('9001', 'Colega Nueve', 'Analista', 68, 'Sufi',
+select prueba.registrar_horas('9001', 'Colega Nueve', 'Analista', 68, 'Sufi',
   '2026-10-06', '17:00', '18:00', 'Segunda justificación');
 
 select prueba.como_postgres();

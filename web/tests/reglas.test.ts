@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { erroresLocales, nombrePropio, type DatosRegistro, type Reglas } from '../src/lib/reglas';
+import { erroresLocales, jefesDeLaFilial, nombrePropio, SIN_COORDINADOR, type DatosRegistro, type Reglas } from '../src/lib/reglas';
 
 const reglas: Reglas = {
   hoy: '2026-10-15',
@@ -17,6 +17,8 @@ const valido: DatosRegistro = {
   cargo: 'Analista',
   nivel: 68,
   filial: 'Banco',
+  coordinador: 'id-coordinador',
+  director: '',
   fecha_horas_extras: '2026-10-05',
   hora_inicio: '17:00',
   hora_final: '19:00',
@@ -25,9 +27,26 @@ const valido: DatosRegistro = {
 
 const errores = (cambios: Partial<DatosRegistro>) => erroresLocales({ ...valido, ...cambios }, reglas);
 
+describe('jefesDeLaFilial', () => {
+  const jefes = [
+    { id: 'sufi', filial: 'Sufi' },
+    { id: 'banco', filial: 'Banco' },
+    { id: 'todas', filial: null },
+  ];
+
+  it('deja a los de esa filial y a los que sirven para todas', () => {
+    expect(jefesDeLaFilial(jefes, 'Sufi').map((j) => j.id)).toEqual(['sufi', 'todas']);
+  });
+});
+
 describe('erroresLocales', () => {
   it('un registro válido no tiene errores', () => {
     expect(errores({})).toEqual({});
+  });
+  it('exige coordinador y, con Ninguno, director', () => {
+    expect(errores({ coordinador: '' }).coordinador).toBeDefined();
+    expect(errores({ coordinador: SIN_COORDINADOR }).director).toBeDefined();
+    expect(errores({ coordinador: SIN_COORDINADOR, director: 'id-director' })).toEqual({});
   });
   it('rechaza niveles distintos de 68, 73 y 78', () => {
     expect(errores({ nivel: 70 }).nivel).toBeDefined();

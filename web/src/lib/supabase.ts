@@ -1,11 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Sin login: solo la clave publicable (anon). Lo que se puede hacer lo limitan RLS y las
-// funciones de la base.
+// Empleados sin login y jefes con su cuenta, siempre con la clave publicable (anon). Lo que se
+// puede hacer lo limitan RLS y las funciones de la base.
 export const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
   import.meta.env.VITE_SUPABASE_ANON_KEY,
-  { auth: { persistSession: false, autoRefreshToken: false } },
 );
 
 /** Mensaje en español que devuelve la base (las reglas lo arman), o uno genérico. */

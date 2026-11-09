@@ -16,10 +16,10 @@ select prueba.debe_fallar('El mes siguiente sigue con su propio error',
   $$select prueba.reg('1803', '2026-12-01', '17:00', '18:00')$$, 'HE_FECHA_FUERA_DEL_MES');
 
 select prueba.debe_fallar('Sufi tampoco puede registrar un día futuro',
-  $$select public.registrar_horas('1804', 'Colega 1804', 'Cargo', 68, 'Sufi', '2026-11-05',
+  $$select prueba.registrar_horas('1804', 'Colega 1804', 'Cargo', 68, 'Sufi', '2026-11-05',
     '12:00', '21:00', 'Prueba', 60)$$, 'HE_FECHA_FUTURA');
 select prueba.debe_fallar('Con varios días, uno futuro impide guardar todos',
-  $$select public.registrar_varios('1805', 'Colega 1805', 'Cargo', 68, 'Banco', '[
+  $$select prueba.registrar_varios('1805', 'Colega 1805', 'Cargo', 68, 'Banco', '[
     {"fecha": "2026-11-03", "inicio": "17:00", "final": "18:00"},
     {"fecha": "2026-11-05", "inicio": "17:00", "final": "18:00"}]', 'Prueba')$$, 'HE_FECHA_FUTURA');
 select prueba.ok('revisar_varios señala el día futuro en el campo de fecha',

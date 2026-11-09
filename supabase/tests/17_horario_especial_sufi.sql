@@ -9,7 +9,7 @@ create function prueba.sufi(
   p_filial text default 'Sufi'
 ) returns bigint language sql as $$
   insert into prueba.claves (id, clave)
-  select id, clave_anulacion from public.registrar_horas(p_identificacion,
+  select id, clave_anulacion from prueba.registrar_horas(p_identificacion,
     'Colega ' || p_identificacion, 'Cargo de prueba', 68, p_filial, p_fecha, p_inicio, p_final,
     'Cierre de proceso de prueba', p_minutos)
   returning id
@@ -18,7 +18,7 @@ $$;
 create function prueba.sufi_varios(p_identificacion text, p_dias jsonb)
 returns setof bigint language sql as $$
   insert into prueba.claves (id, clave)
-  select id, clave_anulacion from public.registrar_varios(p_identificacion,
+  select id, clave_anulacion from prueba.registrar_varios(p_identificacion,
     'Colega ' || p_identificacion, 'Cargo de prueba', 68, 'Sufi', p_dias,
     'Cierre de proceso de prueba')
   returning id

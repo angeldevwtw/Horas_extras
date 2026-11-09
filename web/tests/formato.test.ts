@@ -17,7 +17,7 @@ const registro: Registro = {
   minutos_totales: 60,
   tipo_dia: 'habil',
   justificacion: 'Apoyo a cierre de prueba',
-  estado: 'registrada',
+  estado: 'registrada', aprobacion: 'aprobada',
   clave_anulacion: '00000000-0000-0000-0000-000000000000',
 };
 

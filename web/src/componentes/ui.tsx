@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import type { Aprobacion, Estado } from '../lib/tipos';
 
 const VARIANTES = {
   primario: 'bg-primario text-blanco hover:bg-primario-hover',
@@ -98,11 +99,14 @@ export function Aviso({ tipo, children }: { tipo: 'error' | 'exito'; children: R
   return <div role="status" className={`rounded-md border px-4 py-3 text-sm ${clase}`}>{children}</div>;
 }
 
-export function InsigniaEstado({ estado }: { estado: 'registrada' | 'anulada' }) {
-  const clase = estado === 'registrada' ? 'bg-estado-registrada' : 'bg-estado-anulada';
-  return (
-    <span className={`rounded-full px-2 py-0.5 text-xs font-semibold text-blanco ${clase}`}>
-      {estado === 'registrada' ? 'Registrada' : 'Anulada'}
-    </span>
-  );
+const INSIGNIAS = {
+  pendiente: ['Pendiente', 'bg-alerta text-texto'],
+  aprobada: ['Aprobada', 'bg-estado-registrada text-blanco'],
+  negada: ['Negada', 'bg-error text-blanco'],
+  anulada: ['Anulada', 'bg-estado-anulada text-blanco'],
+} as const;
+
+export function InsigniaEstado({ estado, aprobacion }: { estado: Estado; aprobacion: Aprobacion }) {
+  const [texto, clase] = INSIGNIAS[estado === 'registrada' ? aprobacion : estado];
+  return <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${clase}`}>{texto}</span>;
 }
