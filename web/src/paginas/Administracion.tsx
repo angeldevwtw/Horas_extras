@@ -238,10 +238,10 @@ function PanelAdministracion({ clave, mes, hoy, festivos, registros, aviso, alCa
                           <div className="flex gap-2">
                             <Boton variante="peligro" className="px-2 py-1"
                               disabled={trabajando || !anulando.motivo.trim()} onClick={confirmar}>
-                              {trabajando ? 'Anulando…' : 'Confirmar'}
+                              {trabajando ? 'Anulando…' : 'Anular registro'}
                             </Boton>
                             <Boton variante="borde" className="px-2 py-1" onClick={() => setAnulando(null)}>
-                              Cancelar
+                              No anular
                             </Boton>
                           </div>
                         </div>

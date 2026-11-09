@@ -63,6 +63,14 @@ security definer as $$
   where identificacion = p_identificacion and fecha_horas_extras = p_fecha
 $$;
 grant execute on function prueba.codigo to anon, authenticated;
+create function prueba.ventana(p_codigo text, p_clave_buena boolean default true) returns jsonb
+language sql security definer as $$
+  select jsonb_build_array(jsonb_build_object('id', r.id,
+    'clave', case when p_clave_buena then c.clave else gen_random_uuid() end))
+  from public.registros r join prueba.claves c on c.id = r.id
+  where r.codigo = p_codigo
+$$;
+grant execute on function prueba.ventana to anon, authenticated;
 select prueba.anonimo();
 
 select prueba.debe_fallar('Sin cuenta no se ven los registros del equipo',
@@ -115,6 +123,13 @@ select prueba.debe_fallar('La directora no decide lo de otro director',
   'HE_SIN_PERMISO');
 select prueba.ok('La directora niega lo de su coordinadora',
   public.decidir_registros(array[prueba.codigo('1902', '2026-11-04')], 'negada', 'No autorizada') = 1);
+select prueba.anonimo();
+select prueba.ok('La ventana ve la decisión del jefe con la clave del registro',
+  (select estado = 'negada' and aprobacion = 'negada'
+   from public.estado_en_la_ventana(prueba.ventana(prueba.codigo('1902', '2026-11-04')))));
+select prueba.ok('Sin la clave no dice nada del registro',
+  not exists (select 1 from public.estado_en_la_ventana(prueba.ventana(prueba.codigo('1902', '2026-11-04'), false))));
+select prueba.como_cuenta('10000000-0000-0000-0000-000000000001');
 select prueba.debe_fallar('El jefe no puede modificar registros directamente',
   $$update public.registros set aprobacion = 'aprobada'$$, '42501');
 

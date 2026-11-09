@@ -70,7 +70,7 @@ export function RegistrosDeLaVentana({ registros, alAnular }: {
                   <td className="px-3 py-2.5">{formatoDuracion(r.minutos_totales)}</td>
                   <td className="px-3 py-2.5"><InsigniaEstado estado={r.estado} aprobacion={r.aprobacion} /></td>
                   <td className="px-3 py-2.5">
-                    {r.estado === 'registrada' && anulando?.id !== r.id && (
+                    {r.estado === 'registrada' && r.aprobacion === 'pendiente' && anulando?.id !== r.id && (
                       <Boton variante="peligro" className="px-2 py-1"
                         onClick={() => setAnulando({ id: r.id, motivo: '' })}>
                         Anular
@@ -84,10 +84,10 @@ export function RegistrosDeLaVentana({ registros, alAnular }: {
                         <div className="flex gap-2">
                           <Boton variante="peligro" className="px-2 py-1" disabled={!anulando.motivo.trim()}
                             onClick={() => confirmarAnulacion(r)}>
-                            Confirmar
+                            Anular registro
                           </Boton>
                           <Boton variante="borde" className="px-2 py-1" onClick={() => setAnulando(null)}>
-                            Cancelar
+                            No anular
                           </Boton>
                         </div>
                       </div>

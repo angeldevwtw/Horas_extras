@@ -52,6 +52,27 @@ export function App() {
 
   useEffect(() => { guardarRegistros(registros); }, [registros]);
 
+  // La decisión del jefe llega desde la base: al abrir la página y al volver a la pestaña.
+  useEffect(() => {
+    async function actualizarEstados() {
+      const vigentes = leerRegistros().filter((r) => r.estado === 'registrada');
+      if (!vigentes.length) return;
+      const { data, error } = await supabase.rpc('estado_en_la_ventana', {
+        p_registros: vigentes.map((r) => ({ id: r.id, clave: r.clave_anulacion })),
+      });
+      // Si falla, la lista sigue con el último estado conocido.
+      if (error) return;
+      const porId = new Map((data as Pick<Registro, 'id' | 'estado' | 'aprobacion'>[]).map((d) => [d.id, d]));
+      setRegistros((lista) => lista.map((r) => {
+        const actual = porId.get(r.id);
+        return actual ? { ...r, estado: actual.estado, aprobacion: actual.aprobacion } : r;
+      }));
+    }
+    void actualizarEstados();
+    window.addEventListener('focus', actualizarEstados);
+    return () => window.removeEventListener('focus', actualizarEstados);
+  }, []);
+
   // Sin router: #admin abre la administración, #equipo la de los jefes y cualquier otra, el registro.
   const [vista, setVista] = useState(vistaDeLaDireccion);
   const [conGuia, setConGuia] = useState(false);

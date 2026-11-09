@@ -139,8 +139,8 @@ function PanelEquipo({ perfil, hoy, alSalir }: { perfil: Perfil; hoy: string; al
                   className={claseEntrada} onChange={(e) => setNegando({ codigo: r.codigo, motivo: e.target.value })} />
                 <div className="flex gap-2">
                   <Boton variante="peligro" className="px-2 py-1" disabled={trabajando || !negando.motivo.trim()}
-                    onClick={() => decidir([r.codigo], 'negada', negando.motivo)}>Confirmar</Boton>
-                  <Boton variante="borde" className="px-2 py-1" onClick={() => setNegando(null)}>Cancelar</Boton>
+                    onClick={() => decidir([r.codigo], 'negada', negando.motivo)}>Negar registro</Boton>
+                  <Boton variante="borde" className="px-2 py-1" onClick={() => setNegando(null)}>No negar</Boton>
                 </div>
               </div>
             ) : (
