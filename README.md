@@ -10,7 +10,7 @@ Los empleados no tienen login: quien abre la página llena el formulario, elige 
 | Rol | Entra con | Ve | Puede |
 |---|---|---|---|
 | Coordinador | Su cuenta, en "Mi equipo" (`#equipo`) | Lo de su equipo | Aprobar, negar y bajar el Excel de lo aprobado |
-| Director | Su cuenta, en "Mi equipo" (`#equipo`) | Lo de sus coordinadores y de quienes lo eligieron directamente | Lo mismo que el coordinador, agregar o desactivar sus coordinadores y asignar su filial y la de ellos |
+| Director | Su cuenta, en "Mi equipo" (`#equipo`) | Lo de sus coordinadores y de quienes lo eligieron directamente | Lo mismo que el coordinador, agregar o desactivar sus coordinadores, asignarles la contraseña y asignar su filial y la de ellos |
 | Super admin | Clave, en "Administración" (`#admin`) | Todo, de todas las filiales | Anular, bajar el Excel de lo aprobado y mantener la lista de jefes; no aprueba |
 
 Vale la primera decisión. Un registro pendiente cuenta para los topes; uno negado libera sus horas.
@@ -117,6 +117,9 @@ cp .env.example .env.local   # poner la URL y la clave publicable del proyecto
 npm run dev
 ```
 
+`npm run dev` no sirve las funciones de `web/api`; para probar la asignación de contraseñas en
+local, usar `npx vercel dev` con `SUPABASE_SERVICE_ROLE_KEY` en `web/.env.local`.
+
 ## Publicar el frontend (Vercel)
 
 - Carpeta base (Root Directory): `web`; Framework: Vite.
@@ -124,21 +127,29 @@ npm run dev
   navegador) y `SUPABASE_URL` y `SUPABASE_ANON_KEY`, todas creadas por la integración, o
   `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`. `web/vite.config.ts` pasa al navegador solo
   esas dos; la `service_role` nunca.
+- `SUPABASE_SERVICE_ROLE_KEY` (la crea la integración; si no, copiarla de Supabase → Project
+  Settings → API Keys, la *secret* o la *service_role*): solo la usa `web/api/contrasena-coordinador.ts`,
+  que corre en Vercel, para que el director asigne la contraseña de sus coordinadores. Nunca con
+  prefijo `VITE_`: ese prefijo la mandaría al navegador.
 - Settings → Deployment Protection: desactivar *Vercel Authentication* en producción, o la
   página pedirá iniciar sesión en Vercel.
 
 ## Directores y coordinadores
 
 1. En Authentication → Providers → Email (o Sign In / Providers, según la versión del panel):
-   **desactivar "Allow new users to sign up"**. Las cuentas las crea solo el administrador. Es
-   necesario: si cualquiera pudiera crear una cuenta autoconfirmada con el correo de un jefe,
-   entraría con su rol.
+   **desactivar "Allow new users to sign up"**. Nadie crea su propia cuenta. Es necesario: si
+   cualquiera pudiera crear una cuenta autoconfirmada con el correo de un jefe, entraría con su rol.
 2. En "Administración" → "Directores y coordinadores": agregar los directores. Los coordinadores
    los agrega ahí el administrador o cada director en "Mi equipo", solo para su propia línea. Con
    filial, el jefe sale en el formulario solo para esa; con "Todas las filiales", para todas.
    Mientras no haya jefes activos, nadie puede registrar horas.
-3. En Authentication → Users → Add user: crear cada cuenta con el mismo correo, una contraseña y
-   "Auto Confirm User". La lista muestra "Creada" cuando ya existe. Las contraseñas se cambian ahí.
+3. **Directores**: solo el super admin crea su cuenta, en Authentication → Users → Add user, con el
+   mismo correo, una contraseña y "Auto Confirm User". Su contraseña se cambia ahí.
+4. **Coordinadores**: su director les asigna la contraseña en "Mi equipo" → "Asignar contraseña";
+   si la cuenta no existe la crea ya confirmada, y si existe la cambia y cierra sus sesiones. Solo
+   para coordinadores activos de su línea, mínimo 8 caracteres. Lo hace `web/api/contrasena-coordinador.ts`
+   con la `service_role`; el permiso lo decide la base (`autorizar_contrasena_coordinador`). El super admin también puede
+   hacerlo desde Authentication → Users. La lista muestra "Creada" cuando la cuenta ya existe.
 
 ## Administración (panel de Supabase)
 

@@ -11,6 +11,10 @@ create table auth.users (
   email text unique,
   email_confirmed_at timestamptz default now()
 );
+create table auth.sessions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade
+);
 create function auth.uid() returns uuid language sql stable as $$
   select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid
 $$;
