@@ -1,10 +1,16 @@
 import { useState, type FormEvent } from 'react';
 import { GestionJefes } from '../componentes/GestionJefes';
-import { ColegasConMasHoras, HorasPorDia, HorasPorFilial } from '../componentes/Graficas';
+import { FiltrosAdmin } from '../componentes/FiltrosAdmin';
+import {
+  ColegasConMasHoras, HorasPorDia, HorasPorFilial, HorasPorJefe, RegistrosPorEstado,
+} from '../componentes/Graficas';
 import { Aviso, Boton, Campo, claseEntrada, InsigniaEstado, Tarjeta } from '../componentes/ui';
 import { descargarFormato } from '../exportar/formatoServicesCentral';
 import { formatoFecha, NOMBRE_TIPO_DIA, nombreMes } from '../lib/fechas';
 import { formatoDuracion, formatoHoraAmPm, formatoTotalHoras } from '../lib/horas';
+import {
+  alternar, aplicarFiltros, DIMENSIONES, type Dimension, type Filtros, paraHoras,
+} from '../lib/filtrosAdmin';
 import { mensajeDeError, supabase } from '../lib/supabase';
 import type { RegistroAdmin } from '../lib/tipos';
 
@@ -91,17 +97,23 @@ function PanelAdministracion({ clave, mes, hoy, festivos, registros, aviso, alCa
   alSalir: () => void;
 }) {
   const [busqueda, setBusqueda] = useState('');
+  const [filtros, setFiltros] = useState<Filtros>({});
   const [anulando, setAnulando] = useState<{ codigo: string; motivo: string } | null>(null);
   const [trabajando, setTrabajando] = useState(false);
 
-  const vigentes = registros.filter((r) => r.estado === 'registrada');
+  const visibles = aplicarFiltros(registros, filtros, busqueda);
+  const vigentes = visibles.filter((r) => r.estado === 'registrada');
   const aprobados = vigentes.filter((r) => r.aprobacion === 'aprobada');
   const minutosVigentes = vigentes.reduce((suma, r) => suma + r.minutos_totales, 0);
-  const texto = busqueda.trim().toLowerCase();
-  const visibles = texto
-    ? registros.filter((r) => [r.codigo, r.identificacion, r.nombre_completo]
-      .some((valor) => valor.toLowerCase().includes(texto)))
-    : registros;
+  const colegas = new Set(vigentes.map((r) => r.identificacion)).size;
+  const filtrando = busqueda.trim() !== '' || Object.values(filtros).some((v) => v.length);
+
+  // Cada gráfica ignora su propio filtro: lo elegido queda resaltado y lo demás, atenuado.
+  const datosDe = (dimension: Dimension) => paraHoras(aplicarFiltros(registros, filtros, busqueda, dimension), filtros);
+  const interaccion = (dimension: Dimension) => ({
+    elegidos: filtros[dimension] ?? [],
+    alElegir: (valor: string) => setFiltros(alternar(filtros, dimension, valor)),
+  });
 
   async function confirmar() {
     if (!anulando) return;
@@ -120,57 +132,73 @@ function PanelAdministracion({ clave, mes, hoy, festivos, registros, aviso, alCa
         <div className="flex flex-wrap items-end gap-3">
           <Campo etiqueta="Mes" htmlFor="mes-admin">
             <input id="mes-admin" type="month" value={mes} max={hoy.slice(0, 7)} className={claseEntrada}
-              onChange={(e) => e.target.value && alCambiarMes(e.target.value)} />
+              onChange={(e) => {
+                if (!e.target.value) return;
+                setFiltros({ ...filtros, fecha: [] });
+                alCambiarMes(e.target.value);
+              }} />
           </Campo>
           <Boton disabled={!aprobados.length}
             onClick={() => descargarFormato(aprobados, `horas-extras-consolidado-${mes}.xlsx`)}>
-            Descargar Excel ({aprobados.length} aprobados)
+            Descargar Excel ({aprobados.length} aprobados{filtrando ? ', filtrados' : ''})
           </Boton>
           <Boton variante="borde" onClick={alSalir}>Salir</Boton>
         </div>
       </div>
 
-      <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <FiltrosAdmin registros={registros} filtros={filtros} texto={busqueda}
+        alCambiar={setFiltros} alBuscar={setBusqueda} />
+
+      <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {[
           ['Registros vigentes', String(vigentes.length)],
           ['Pendientes de aprobar', String(vigentes.length - aprobados.length)],
-          ['Horas extras del mes', formatoTotalHoras(minutosVigentes)],
-          ['Anulados o negados', String(registros.length - vigentes.length)],
+          ['Horas extras', formatoTotalHoras(minutosVigentes)],
+          ['Colegas', String(colegas)],
+          ['Anulados o negados', String(visibles.length - vigentes.length)],
         ].map(([nombre, valor]) => (
-          <div key={nombre} className="rounded-xl border border-borde bg-blanco p-5 shadow-xs">
+          <div key={nombre} className="rounded-xl border border-borde bg-superficie p-5 shadow-xs">
             <dt className="text-xs font-medium uppercase tracking-wide text-texto-suave">{nombre}</dt>
             <dd className="mt-1 text-3xl font-semibold text-primario">{valor}</dd>
           </div>
         ))}
       </dl>
 
-      {vigentes.length > 0 && (
+      {registros.length > 0 && (
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="lg:col-span-2">
-            <Tarjeta titulo="Horas por día" descripcion="Cuántas horas extras se registraron cada día. Pase el mouse por una barra para ver el detalle.">
-              <HorasPorDia registros={vigentes} mes={mes} festivos={festivos} />
+            <Tarjeta titulo="Horas por día"
+              descripcion="Clic en una barra para filtrar todo el panel por ese día; otro clic lo quita.">
+              <HorasPorDia registros={datosDe('fecha')} mes={mes} festivos={festivos} {...interaccion('fecha')} />
             </Tarjeta>
           </div>
+          <Tarjeta titulo="Estado de los registros" descripcion="Cuántos hay de cada estado y sus horas.">
+            <RegistrosPorEstado registros={aplicarFiltros(registros, filtros, busqueda, 'estado')} {...interaccion('estado')} />
+          </Tarjeta>
           <Tarjeta titulo="Horas por filial">
-            <HorasPorFilial registros={vigentes} />
+            <HorasPorFilial registros={datosDe('filial')} {...interaccion('filial')} />
           </Tarjeta>
-          <Tarjeta titulo="Colegas con más horas" descripcion="Los 8 con más horas extras en el mes.">
-            <ColegasConMasHoras registros={vigentes} />
+          <Tarjeta titulo="Horas por director" descripcion="Los 8 con más horas en su línea.">
+            <HorasPorJefe registros={datosDe('director')} clave={DIMENSIONES.director} {...interaccion('director')} />
           </Tarjeta>
+          <Tarjeta titulo="Horas por coordinador" descripcion="Los 8 con más horas en su equipo.">
+            <HorasPorJefe registros={datosDe('coordinador')} clave={DIMENSIONES.coordinador} {...interaccion('coordinador')} />
+          </Tarjeta>
+          <div className="lg:col-span-2">
+            <Tarjeta titulo="Colegas con más horas" descripcion="Los 8 con más horas extras.">
+              <ColegasConMasHoras registros={datosDe('colega')} {...interaccion('colega')} />
+            </Tarjeta>
+          </div>
         </div>
       )}
 
       {aviso && <Aviso tipo={aviso.tipo}>{aviso.texto}</Aviso>}
 
       <Tarjeta titulo="Registros del mes"
-        acciones={(
-          <input type="search" aria-label="Buscar por código, cédula o nombre"
-            placeholder="Buscar por código, cédula o nombre" value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)} className={`${claseEntrada} sm:w-72`} />
-        )}>
+        descripcion={filtrando ? `${visibles.length} de ${registros.length} registros con los filtros.` : `${registros.length} registros.`}>
         {!visibles.length ? (
           <p className="rounded-lg border border-dashed border-borde py-8 text-center text-sm text-texto-suave">
-            {registros.length ? 'Ningún registro coincide con la búsqueda.' : 'No hay registros en este mes.'}
+            {registros.length ? 'Ningún registro coincide con los filtros.' : 'No hay registros en este mes.'}
           </p>
         ) : (
           <div className="overflow-x-auto">

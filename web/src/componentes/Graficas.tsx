@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { diaDeSemana, diasDelMes, formatoFecha } from '../lib/fechas';
 import { formatoHorasDecimal, formatoTotalHoras } from '../lib/horas';
+import { ESTADOS, type EstadoVisible, estadoVisible } from '../lib/filtrosAdmin';
 import { FILIALES } from '../lib/reglas';
 import type { RegistroAdmin } from '../lib/tipos';
 
@@ -12,7 +13,7 @@ const registrosTexto = (n: number) => `${n} ${n === 1 ? 'registro' : 'registros'
 function Detalle({ children }: { children: ReactNode }) {
   return (
     <span role="tooltip" className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2
-      -translate-x-1/2 whitespace-nowrap rounded-md bg-texto px-2.5 py-1.5 text-xs text-blanco opacity-0
+      -translate-x-1/2 whitespace-nowrap rounded-md bg-texto px-2.5 py-1.5 text-xs text-fondo opacity-0
       shadow-sm transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
       {children}
     </span>
@@ -47,10 +48,12 @@ function escalaDelEje(minutosPico: number) {
 }
 
 /** Horas de cada día del mes, con fines de semana y festivos sombreados y el valor encima de cada barra. */
-export function HorasPorDia({ registros, mes, festivos }: {
+export function HorasPorDia({ registros, mes, festivos, elegidos = [], alElegir }: {
   registros: RegistroAdmin[];
   mes: string;
   festivos: Set<string>;
+  elegidos?: string[];
+  alElegir?: (fecha: string) => void;
 }) {
   const porDia = sumarPor(registros, (r) => r.fecha_horas_extras);
   const dias = diasDelMes(`${mes}-01`);
@@ -92,15 +95,21 @@ export function HorasPorDia({ registros, mes, festivos }: {
               {dias.map((fecha) => {
                 const total = porDia.get(fecha);
                 const especial = diaDeSemana(fecha) % 6 === 0 || festivos.has(fecha);
+                const elegido = elegidos.includes(fecha);
+                const apagado = elegidos.length > 0 && !elegido;
                 return (
-                  <div key={fecha} tabIndex={total ? 0 : -1}
-                    aria-label={total ? `${nombreCorto(fecha)}: ${formatoTotalHoras(total.minutos)}` : undefined}
+                  <button key={fecha} type="button" disabled={!total || !alElegir} aria-pressed={elegido}
+                    onClick={() => alElegir?.(fecha)}
+                    aria-label={total ? `${nombreCorto(fecha)}: ${formatoTotalHoras(total.minutos)}` : nombreCorto(fecha)}
                     className={`group relative flex h-full flex-1 flex-col items-center justify-end rounded-t-sm
-                      ${especial ? 'bg-seleccion' : ''}`}>
+                      enabled:cursor-pointer ${especial ? 'bg-seleccion' : ''}`}>
                     {total && (
                       <>
-                        <span className="mb-1 text-[11px] font-semibold leading-none">{formatoHorasDecimal(total.minutos)}</span>
-                        <div className="w-full max-w-6 rounded-t bg-primario group-hover:bg-secundario"
+                        <span className={`mb-1 text-[11px] font-semibold leading-none ${apagado ? 'text-texto-suave' : ''}`}>
+                          {formatoHorasDecimal(total.minutos)}
+                        </span>
+                        <div className={`w-full max-w-6 rounded-t transition-opacity group-hover:bg-secundario
+                          ${elegido ? 'bg-secundario' : 'bg-primario'} ${apagado ? 'opacity-30' : ''}`}
                           style={{ height: `${(total.minutos / techo) * 100}%` }} />
                         <Detalle>
                           <strong>{nombreCorto(fecha)}</strong> · {formatoHorasDecimal(total.minutos)} h
@@ -108,7 +117,7 @@ export function HorasPorDia({ registros, mes, festivos }: {
                         </Detalle>
                       </>
                     )}
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -143,7 +152,13 @@ export function HorasPorDia({ registros, mes, festivos }: {
 
 const nombreCorto = (fecha: string) => `${DIAS[diaDeSemana(fecha)]} ${formatoFecha(fecha).slice(0, 5)}`;
 
-interface Fila { clave: string; nombre: string; detalle?: string; minutos: number; registros: number }
+interface Fila { clave: string; nombre: string; detalle?: string; minutos: number; registros: number; color?: string }
+
+const SinDatos = () => (
+  <p className="rounded-lg border border-dashed border-borde py-8 text-center text-sm text-texto-suave">
+    Sin horas con estos filtros.
+  </p>
+);
 
 const porcentaje = (parte: number, total: number) => (total ? Math.round((parte / total) * 100) : 0);
 
@@ -153,22 +168,30 @@ function Titular({ children }: { children: ReactNode }) {
 }
 
 /** Barras frente al mayor; el porcentaje es sobre el total del mes, aunque se muestren solo algunas. */
-function BarrasHorizontales({ titulo, filas, total, conPosicion = false }: {
+function BarrasHorizontales({ titulo, filas, total, conPosicion = false, elegidos = [], alElegir }: {
   titulo: string;
   filas: Fila[];
   total: number;
   conPosicion?: boolean;
+  elegidos?: string[];
+  alElegir?: (clave: string) => void;
 }) {
   const mayor = Math.max(1, ...filas.map((f) => f.minutos));
+  if (!filas.length) return <SinDatos />;
   return (
     <figure>
       <figcaption className="sr-only">{titulo}</figcaption>
       <ol className="grid gap-4">
         {filas.map((f, i) => (
-          <li key={f.clave} tabIndex={0} className="group relative flex items-center gap-3 rounded-md outline-offset-4">
+          <li key={f.clave}>
+          <button type="button" disabled={!alElegir} aria-pressed={elegidos.includes(f.clave)}
+            onClick={() => alElegir?.(f.clave)}
+            className={`group relative flex w-full items-center gap-3 rounded-md text-left outline-offset-4
+              transition-opacity enabled:cursor-pointer
+              ${elegidos.length && !elegidos.includes(f.clave) ? 'opacity-40 hover:opacity-80' : ''}`}>
             {conPosicion && (
               <span aria-hidden className={`grid size-7 shrink-0 place-items-center rounded-full text-xs font-semibold
-                ${i === 0 ? 'bg-primario text-blanco' : 'bg-suave text-primario'}`}>{i + 1}</span>
+                ${i === 0 ? 'bg-primario text-sobre-color' : 'bg-suave text-primario'}`}>{i + 1}</span>
             )}
             <div className="grid min-w-0 flex-1 gap-1.5">
               <div className="flex items-baseline justify-between gap-3">
@@ -182,14 +205,17 @@ function BarrasHorizontales({ titulo, filas, total, conPosicion = false }: {
                 </span>
               </div>
               <div className="h-2.5 rounded-full bg-fondo">
-                <div className="h-full rounded-full bg-primario transition-[width] group-hover:bg-secundario"
+                <div className={`h-full rounded-full transition-[width] group-hover:bg-secundario
+                  ${elegidos.includes(f.clave) ? 'bg-secundario' : f.color ?? 'bg-primario'}`}
                   style={{ width: `${(f.minutos / mayor) * 100}%` }} />
               </div>
               <span className="text-xs text-texto-suave">{registrosTexto(f.registros)}</span>
             </div>
             <Detalle>
-              <strong>{f.nombre}</strong> · {formatoHorasDecimal(f.minutos)} h · {porcentaje(f.minutos, total)} % del mes
+              <strong>{f.nombre}</strong> · {formatoHorasDecimal(f.minutos)} h · {porcentaje(f.minutos, total)} % del total
+              {alElegir && ' · clic para filtrar'}
             </Detalle>
+          </button>
           </li>
         ))}
       </ol>
@@ -197,27 +223,38 @@ function BarrasHorizontales({ titulo, filas, total, conPosicion = false }: {
   );
 }
 
-export function HorasPorFilial({ registros }: { registros: RegistroAdmin[] }) {
+interface Interactiva {
+  registros: RegistroAdmin[];
+  elegidos?: string[];
+  alElegir?: (clave: string) => void;
+}
+
+const totalDe = (registros: RegistroAdmin[]) => registros.reduce((suma, r) => suma + r.minutos_totales, 0);
+const colegasTexto = (n: number) => `${n} ${n === 1 ? 'colega' : 'colegas'}`;
+
+export function HorasPorFilial({ registros, elegidos, alElegir }: Interactiva) {
   const porFilial = sumarPor(registros, (r) => r.filial);
   const colegas = (filial: string) => new Set(
     registros.filter((r) => r.filial === filial).map((r) => r.identificacion)).size;
   const filas = FILIALES.map((filial) => ({
-    clave: filial, nombre: filial, ...(porFilial.get(filial) ?? { minutos: 0, registros: 0 }),
-  })).map((f) => ({ ...f, detalle: `${colegas(f.nombre)} ${colegas(f.nombre) === 1 ? 'colega' : 'colegas'}` }))
-    .sort((a, b) => b.minutos - a.minutos);
-  const total = filas.reduce((suma, f) => suma + f.minutos, 0);
+    clave: filial, nombre: filial, detalle: colegasTexto(colegas(filial)),
+    ...(porFilial.get(filial) ?? { minutos: 0, registros: 0 }),
+  })).sort((a, b) => b.minutos - a.minutos);
+  const total = totalDe(registros);
+  if (!total) return <SinDatos />;
   return (
     <div className="grid gap-5">
       <Titular>
         <strong>{filas[0].nombre}</strong> concentra el{' '}
-        <strong className="text-primario">{porcentaje(filas[0].minutos, total)} %</strong> de las horas extras del mes.
+        <strong className="text-primario">{porcentaje(filas[0].minutos, total)} %</strong> de las horas extras.
       </Titular>
-      <BarrasHorizontales titulo="Horas extras por filial" filas={filas} total={total} />
+      <BarrasHorizontales titulo="Horas extras por filial" filas={filas} total={total}
+        elegidos={elegidos} alElegir={alElegir} />
     </div>
   );
 }
 
-export function ColegasConMasHoras({ registros, cuantos = 8 }: { registros: RegistroAdmin[]; cuantos?: number }) {
+export function ColegasConMasHoras({ registros, elegidos, alElegir, cuantos = 8 }: Interactiva & { cuantos?: number }) {
   const porColega = sumarPor(registros, (r) => r.identificacion);
   const datos = new Map(registros.map((r) => [r.identificacion, r]));
   const filas = [...porColega.entries()]
@@ -229,14 +266,60 @@ export function ColegasConMasHoras({ registros, cuantos = 8 }: { registros: Regi
     }))
     .sort((a, b) => b.minutos - a.minutos)
     .slice(0, cuantos);
+  if (!filas.length) return <SinDatos />;
   return (
     <div className="grid gap-5">
       <Titular>
-        <strong>{filas[0].nombre}</strong> lleva más horas en el mes:{' '}
+        <strong>{filas[0].nombre}</strong> lleva más horas:{' '}
         <strong className="text-primario">{formatoHorasDecimal(filas[0].minutos)} h</strong>.
       </Titular>
       <BarrasHorizontales titulo="Colegas con más horas extras" filas={filas} conPosicion
-        total={registros.reduce((suma, r) => suma + r.minutos_totales, 0)} />
+        total={totalDe(registros)} elegidos={elegidos} alElegir={alElegir} />
+    </div>
+  );
+}
+
+/** Horas por director (o por coordinador): cuánto aprueba o tiene pendiente cada línea. */
+export function HorasPorJefe({ registros, elegidos, alElegir, clave, cuantos = 8 }: Interactiva & {
+  clave: (r: RegistroAdmin) => string;
+  cuantos?: number;
+}) {
+  const porJefe = sumarPor(registros, clave);
+  const colegas = (jefe: string) => new Set(
+    registros.filter((r) => clave(r) === jefe).map((r) => r.identificacion)).size;
+  const filas = [...porJefe.entries()]
+    .map(([jefe, total]) => ({ clave: jefe, nombre: jefe, detalle: colegasTexto(colegas(jefe)), ...total }))
+    .sort((a, b) => b.minutos - a.minutos)
+    .slice(0, cuantos);
+  return <BarrasHorizontales titulo="Horas extras por jefe" filas={filas} total={totalDe(registros)}
+    elegidos={elegidos} alElegir={alElegir} />;
+}
+
+const COLOR_ESTADO: Record<EstadoVisible, string> = {
+  pendiente: 'bg-alerta',
+  aprobada: 'bg-estado-registrada',
+  negada: 'bg-error',
+  anulada: 'bg-estado-anulada',
+};
+
+/** Registros por estado, con las horas de cada uno: para ver de un vistazo lo que falta decidir. */
+export function RegistrosPorEstado({ registros, elegidos, alElegir }: Interactiva) {
+  const porEstado = sumarPor(registros, estadoVisible);
+  const filas = ESTADOS.map(({ valor, nombre }) => ({
+    clave: valor, nombre, color: COLOR_ESTADO[valor],
+    ...(porEstado.get(valor) ?? { minutos: 0, registros: 0 }),
+  }));
+  const pendientes = porEstado.get('pendiente')?.registros ?? 0;
+  if (!registros.length) return <SinDatos />;
+  return (
+    <div className="grid gap-5">
+      <Titular>
+        {pendientes
+          ? <><strong className="text-primario">{registrosTexto(pendientes)}</strong> por decidir.</>
+          : 'No hay registros pendientes de decidir.'}
+      </Titular>
+      <BarrasHorizontales titulo="Registros por estado" filas={filas} total={totalDe(registros)}
+        elegidos={elegidos} alElegir={alElegir} />
     </div>
   );
 }

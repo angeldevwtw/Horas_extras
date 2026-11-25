@@ -2,10 +2,10 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import type { Aprobacion, Estado } from '../lib/tipos';
 
 const VARIANTES = {
-  primario: 'bg-primario text-blanco hover:bg-primario-hover',
-  secundario: 'bg-secundario text-blanco hover:bg-primario',
-  borde: 'border border-borde bg-blanco text-primario hover:bg-suave',
-  peligro: 'border border-error bg-blanco text-error hover:bg-error-suave',
+  primario: 'bg-primario text-sobre-color hover:bg-primario-hover',
+  secundario: 'bg-secundario text-sobre-color hover:bg-primario',
+  borde: 'border border-borde bg-superficie text-primario hover:bg-suave',
+  peligro: 'border border-error bg-superficie text-error hover:bg-error-suave',
 };
 
 export function Boton({
@@ -40,7 +40,7 @@ export function Campo({ etiqueta, error, ayuda, htmlFor, children }: {
   );
 }
 
-export const claseEntrada = `w-full rounded-md border border-borde bg-blanco px-3 py-2 text-sm
+export const claseEntrada = `w-full rounded-md border border-borde bg-superficie px-3 py-2 text-sm
   transition-colors hover:border-texto-suave focus:border-primario focus:outline-none
   focus:ring-3 focus:ring-primario/15 disabled:bg-fondo disabled:text-texto-suave
   disabled:hover:border-borde aria-invalid:border-error`;
@@ -53,7 +53,7 @@ export function Tarjeta({ titulo, descripcion, children, acciones, guia }: {
   guia?: string;
 }) {
   return (
-    <section data-guia={guia} className="rounded-xl border border-borde bg-blanco p-5 shadow-xs sm:p-6">
+    <section data-guia={guia} className="rounded-xl border border-borde bg-superficie p-5 shadow-xs sm:p-6">
       {(titulo || acciones) && (
         <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -95,15 +95,15 @@ export function Paso({ numero, titulo, descripcion, children, guia }: {
 export function Aviso({ tipo, children }: { tipo: 'error' | 'exito'; children: ReactNode }) {
   const clase = tipo === 'error'
     ? 'border-error bg-error-suave text-error'
-    : 'border-estado-registrada bg-blanco text-estado-registrada';
+    : 'border-estado-registrada bg-superficie text-estado-registrada';
   return <div role="status" className={`rounded-md border px-4 py-3 text-sm ${clase}`}>{children}</div>;
 }
 
 const INSIGNIAS = {
-  pendiente: ['Pendiente', 'bg-alerta text-texto'],
-  aprobada: ['Aprobada', 'bg-estado-registrada text-blanco'],
-  negada: ['Negada', 'bg-error text-blanco'],
-  anulada: ['Anulada', 'bg-estado-anulada text-blanco'],
+  pendiente: ['Pendiente', 'bg-alerta text-tinta'],
+  aprobada: ['Aprobada', 'bg-estado-registrada text-sobre-color'],
+  negada: ['Negada', 'bg-error text-sobre-color'],
+  anulada: ['Anulada', 'bg-estado-anulada text-sobre-color'],
 } as const;
 
 export function InsigniaEstado({ estado, aprobacion }: { estado: Estado; aprobacion: Aprobacion }) {

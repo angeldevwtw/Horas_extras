@@ -275,7 +275,7 @@ export function RegistrarHoras({ hoy, config, festivos, jefes, alRegistrar }: {
   return (
     <form onSubmit={guardar} noValidate
       className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-      <div className="rounded-xl border border-borde bg-blanco shadow-xs">
+      <div className="rounded-xl border border-borde bg-superficie shadow-xs">
         <Paso numero={1} titulo="Colega" descripcion="Datos de quien hizo las horas extras." guia="colega">
           <div className="grid gap-4 sm:grid-cols-2">
             <Campo etiqueta="No. identificación" htmlFor="identificacion" error={errorVisible('identificacion')}>
@@ -379,7 +379,7 @@ export function RegistrarHoras({ hoy, config, festivos, jefes, alRegistrar }: {
                 <button key={modo} type="button" onClick={() => elegirModoJustificacion(modo)}
                   aria-pressed={modoJustificacion === modo}
                   className={`rounded-md px-3 py-1.5 text-sm font-semibold transition-colors
-                    ${modoJustificacion === modo ? 'bg-primario text-blanco' : 'text-texto-suave hover:text-texto'}`}>
+                    ${modoJustificacion === modo ? 'bg-primario text-sobre-color' : 'text-texto-suave hover:text-texto'}`}>
                   {texto}
                 </button>
               ))}
@@ -415,7 +415,7 @@ export function RegistrarHoras({ hoy, config, festivos, jefes, alRegistrar }: {
         </Paso>
       </div>
 
-      <aside data-guia="resumen" className="grid gap-5 rounded-xl border border-borde bg-blanco p-5 shadow-xs lg:sticky lg:top-6">
+      <aside data-guia="resumen" className="grid gap-5 rounded-xl border border-borde bg-superficie p-5 shadow-xs lg:sticky lg:top-6">
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-texto-suave">Total de la selección</p>
           <p className="mt-1 text-4xl font-semibold text-primario">

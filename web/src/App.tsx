@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { BotonTema } from './componentes/BotonTema';
 import { Guia } from './componentes/Guia';
 import { Aviso } from './componentes/ui';
 import { hoyBogota, nombreMes } from './lib/fechas';
@@ -99,10 +100,10 @@ export function App() {
 
   return (
     <div className="min-h-screen">
-      <header className="border-b border-borde bg-blanco">
+      <header className="border-b border-borde bg-superficie">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
           <div className="flex items-center gap-3">
-            <span aria-hidden className="grid size-9 place-items-center rounded-lg bg-primario text-sm font-bold text-blanco">
+            <span aria-hidden className="grid size-9 place-items-center rounded-lg bg-primario text-sm font-bold text-sobre-color">
               {jefe ? iniciales(jefe.nombre) : 'HE'}
             </span>
             <div className="leading-tight">
@@ -111,28 +112,29 @@ export function App() {
             </div>
           </div>
           <nav className="flex items-center gap-3 text-sm">
+            <BotonTema />
             <span className="hidden rounded-full bg-suave px-3 py-1 text-xs font-medium text-primario first-letter:uppercase sm:inline">
               {nombreMes(hoy)}
             </span>
             {vista === 'registro' && datosBase && (
               <button type="button" onClick={() => setConGuia(true)} aria-label="Ayuda: cómo funciona la página"
-                className="flex items-center gap-2 rounded-md border border-borde bg-blanco px-3 py-2 text-sm
+                className="flex items-center gap-2 rounded-md border border-borde bg-superficie px-3 py-2 text-sm
                   font-semibold text-primario transition-colors hover:bg-suave">
                 <span aria-hidden className="grid size-5 place-items-center rounded-full bg-primario text-xs
-                  text-blanco">?</span>
+                  text-sobre-color">?</span>
                 Ayuda
               </button>
             )}
             {vista !== 'registro' ? (
-              <a href="#" className="rounded-md bg-primario px-4 py-2 text-sm font-semibold text-blanco transition-colors hover:bg-primario-hover">
+              <a href="#" className="rounded-md bg-primario px-4 py-2 text-sm font-semibold text-sobre-color transition-colors hover:bg-primario-hover">
                 ← Volver al registro
               </a>
             ) : (
               <>
-                <a href="#equipo" className="rounded-md border border-borde bg-blanco px-4 py-2 text-sm font-semibold text-primario transition-colors hover:bg-suave">
+                <a href="#equipo" className="rounded-md border border-borde bg-superficie px-4 py-2 text-sm font-semibold text-primario transition-colors hover:bg-suave">
                   Mi equipo
                 </a>
-                <a href="#admin" className="rounded-md bg-primario px-4 py-2 text-sm font-semibold text-blanco transition-colors hover:bg-primario-hover">
+                <a href="#admin" className="rounded-md bg-primario px-4 py-2 text-sm font-semibold text-sobre-color transition-colors hover:bg-primario-hover">
                   Administración
                 </a>
               </>
@@ -180,7 +182,7 @@ function ReglasEnBreve({ config }: { config: Configuracion }) {
   return (
     <ul className="mt-3 flex flex-wrap gap-2 text-xs text-texto-suave">
       {reglas.map((r) => (
-        <li key={r} className="rounded-full border border-borde bg-blanco px-3 py-1">{r}</li>
+        <li key={r} className="rounded-full border border-borde bg-superficie px-3 py-1">{r}</li>
       ))}
     </ul>
   );

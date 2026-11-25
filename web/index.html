@@ -4,6 +4,16 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Horas Extras</title>
+    <script>
+      // Antes de pintar, para que no parpadee: lo elegido en este equipo o, si no, lo del sistema.
+      try {
+        var tema = localStorage.getItem('tema');
+      } catch (e) {}
+      if (tema !== 'claro' && tema !== 'oscuro') {
+        tema = matchMedia('(prefers-color-scheme: dark)').matches ? 'oscuro' : 'claro';
+      }
+      document.documentElement.dataset.tema = tema;
+    </script>
   </head>
   <body>
     <div id="raiz"></div>

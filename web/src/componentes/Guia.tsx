@@ -65,13 +65,13 @@ export function Guia({ pasos, alCerrar }: { pasos: PasoGuia[]; alCerrar: () => v
   return (
     <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-labelledby="guia-titulo">
       <div className="absolute inset-0" onClick={alCerrar} />
-      <div aria-hidden className="pointer-events-none absolute rounded-xl shadow-[0_0_0_9999px] shadow-texto/60
+      <div aria-hidden className="pointer-events-none absolute rounded-xl shadow-[0_0_0_9999px] shadow-tinta/60
         ring-2 ring-blanco transition-all duration-200"
         style={{
           top: marco.top - MARGEN, left: marco.left - MARGEN,
           width: marco.width + 2 * MARGEN, height: marco.height + 2 * MARGEN,
         }} />
-      <div className="absolute grid gap-3 rounded-xl bg-blanco p-5 shadow-lg transition-all duration-200"
+      <div className="absolute grid gap-3 rounded-xl bg-superficie p-5 shadow-lg transition-all duration-200"
         style={{
           width: ancho, ...posicion,
         }}>

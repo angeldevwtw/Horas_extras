@@ -69,6 +69,11 @@ editan ni se borran: se anulan con un motivo y las horas anuladas dejan de conta
    cédula o nombre; se descarga el Excel del mes y se anula cualquier registro con su motivo,
    aunque la ventana donde se hizo ya esté cerrada. Tras 10 claves equivocadas en 15 minutos
    desde la misma conexión, se bloquea por 15 minutos. La clave no se guarda en el navegador.
+   Los filtros (filial, director, coordinador, colega, tipo de día, nivel, estado y texto) y los
+   clics en las barras de las gráficas filtran a la vez las cifras, las gráficas, la tabla y el
+   Excel: con un filtro activo, el Excel trae solo lo aprobado que queda visible.
+5. El botón de sol y luna del encabezado cambia entre modo claro y oscuro; sin elegir, sigue el
+   del sistema. El Excel siempre sale con los colores de marca.
 
 La lista y las claves para anular viven solo en esa pestaña (se borran al cerrarla, para no dejar
 cédulas en el equipo). Un registro hecho desde otra pestaña ya no se puede anular desde la página;

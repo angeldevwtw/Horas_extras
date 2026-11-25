@@ -36,7 +36,7 @@ export function CalendarioMes({ hoy, festivos, seleccionadas, llenos, domingoPer
         {meses.map((m) => (
           <button key={m} type="button" onClick={() => setMes(m)} aria-pressed={m === mes}
             className={`rounded-md px-3 py-1.5 text-sm font-semibold transition-colors first-letter:uppercase
-              ${m === mes ? 'bg-primario text-blanco' : 'text-texto-suave hover:text-texto'}`}>
+              ${m === mes ? 'bg-primario text-sobre-color' : 'text-texto-suave hover:text-texto'}`}>
             {nombreMes(m)}
             {elegidasEn(m) > 0 && <span className="ml-1.5 font-normal opacity-80">({elegidasEn(m)})</span>}
           </button>
@@ -56,7 +56,7 @@ export function CalendarioMes({ hoy, festivos, seleccionadas, llenos, domingoPer
           // Marcado antes de cambiar de filial: se deja desmarcar.
           const bloqueado = futuro || ((!!lleno || domingoVetado) && !elegida);
           const clase = elegida
-            ? `font-semibold text-blanco ${lleno || domingoVetado ? 'bg-error' : 'bg-primario'}`
+            ? `font-semibold text-sobre-color ${lleno || domingoVetado ? 'bg-error' : 'bg-primario'}`
             : futuro
               ? 'cursor-not-allowed text-texto-suave opacity-40'
               : lleno

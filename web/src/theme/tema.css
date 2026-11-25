@@ -2,8 +2,9 @@
 
 /* Único lugar con colores. "--color-*: initial" quita la paleta por defecto de Tailwind,
    así ningún componente puede usar un color fuera de la paleta de marca.
-   Contraste verificado (WCAG AA, 4.5:1): texto blanco sobre primario, primario-hover,
-   secundario, error, estado-registrada y estado-anulada; texto oscuro sobre alerta. */
+   Contraste verificado (WCAG AA, 4.5:1), en claro y en oscuro: sobre-color sobre primario,
+   primario-hover, secundario, error, estado-registrada y estado-anulada; tinta sobre alerta;
+   texto, texto-suave y primario sobre fondo, superficie, suave y seleccion. */
 @theme static {
   --color-*: initial;
 
@@ -20,13 +21,42 @@
   --color-estado-registrada: #1d7575;
   --color-estado-anulada: #5f6368;
 
-  --color-blanco: #ffffff;
+  --color-blanco: #ffffff;     /* siempre blanco: anillos y el encabezado del Excel */
+  --color-tinta: #1c1c21;      /* siempre oscuro: texto sobre alerta y velo de la guía */
+  --color-sobre-color: #ffffff; /* texto sobre rellenos de color (botones, insignias) */
+  --color-superficie: #ffffff; /* tarjetas, encabezado y campos */
   --color-fondo: #f7f7f8;
   --color-borde: #d9d9de;
   --color-texto: #1c1c21;
   --color-texto-suave: #5c5c66;
 
   --font-sans: "Figtree Variable", "Segoe UI", system-ui, sans-serif;
+}
+
+/* Modo oscuro. Va en body y no en :root a propósito: el Excel lee la paleta de <html>
+   (formatoServicesCentral) y así siempre sale con los colores de marca. */
+:root[data-tema="oscuro"] {
+  color-scheme: dark;
+}
+:root[data-tema="oscuro"] body {
+  --color-primario: #c39be6;
+  --color-primario-hover: #d4b6ef;
+  --color-secundario: #ad7bd8;
+  --color-suave: #2a2234;
+  --color-seleccion: #33283f;
+
+  --color-error: #ff7d9e;
+  --color-error-suave: #3b1d28;
+
+  --color-estado-registrada: #4cbcbc;
+  --color-estado-anulada: #a2a6ad;
+
+  --color-sobre-color: #18151d;
+  --color-superficie: #1c1b22;
+  --color-fondo: #121116;
+  --color-borde: #3a3842;
+  --color-texto: #ececf1;
+  --color-texto-suave: #a9a7b2;
 }
 
 @layer base {
@@ -83,7 +113,7 @@ select:disabled {
     padding: 0.25rem;
     border: 1px solid var(--color-borde);
     border-radius: 0.5rem;
-    background: var(--color-blanco);
+    background: var(--color-superficie);
     box-shadow: 0 8px 24px rgb(28 28 33 / 0.12);
     overflow-y: auto;
   }
