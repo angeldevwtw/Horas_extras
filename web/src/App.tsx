@@ -101,17 +101,18 @@ export function App() {
   return (
     <div className="min-h-screen">
       <header className="border-b border-borde bg-superficie">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-          <div className="flex items-center gap-3">
-            <span aria-hidden className="grid size-9 place-items-center rounded-lg bg-primario text-sm font-bold text-sobre-color">
+        {/* En el celular los enlaces bajan a una segunda fila a todo lo ancho. */}
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-3 gap-y-3 px-4 py-3">
+          <div className="mr-auto flex min-w-0 items-center gap-3">
+            <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-lg bg-primario text-sm font-bold text-sobre-color">
               {jefe ? iniciales(jefe.nombre) : 'HE'}
             </span>
-            <div className="leading-tight">
+            <div className="min-w-0 leading-tight">
               <p className="text-sm font-semibold">Horas extras</p>
-              <p className="text-xs text-texto-suave">{jefe ? jefe.nombre : 'Cuenta Bancolombia'}</p>
+              <p className="truncate text-xs text-texto-suave">{jefe ? jefe.nombre : 'Cuenta Bancolombia'}</p>
             </div>
           </div>
-          <nav className="flex items-center gap-3 text-sm">
+          <div className="flex items-center gap-3 text-sm">
             <BotonTema />
             <span className="hidden rounded-full bg-suave px-3 py-1 text-xs font-medium text-primario first-letter:uppercase sm:inline">
               {nombreMes(hoy)}
@@ -125,16 +126,18 @@ export function App() {
                 Ayuda
               </button>
             )}
+          </div>
+          <nav className="flex w-full gap-3 text-center text-sm sm:w-auto">
             {vista !== 'registro' ? (
-              <a href="#" className="rounded-md bg-primario px-4 py-2 text-sm font-semibold text-sobre-color transition-colors hover:bg-primario-hover">
+              <a href="#" className="flex-1 rounded-md sm:flex-none bg-primario px-4 py-2 text-sm font-semibold text-sobre-color transition-colors hover:bg-primario-hover">
                 ← Volver al registro
               </a>
             ) : (
               <>
-                <a href="#equipo" className="rounded-md border border-borde bg-superficie px-4 py-2 text-sm font-semibold text-primario transition-colors hover:bg-suave">
+                <a href="#equipo" className="flex-1 rounded-md sm:flex-none border border-borde bg-superficie px-4 py-2 text-sm font-semibold text-primario transition-colors hover:bg-suave">
                   Mi equipo
                 </a>
-                <a href="#admin" className="rounded-md bg-primario px-4 py-2 text-sm font-semibold text-sobre-color transition-colors hover:bg-primario-hover">
+                <a href="#admin" className="flex-1 rounded-md sm:flex-none bg-primario px-4 py-2 text-sm font-semibold text-sobre-color transition-colors hover:bg-primario-hover">
                   Administración
                 </a>
               </>

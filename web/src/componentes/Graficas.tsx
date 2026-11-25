@@ -81,59 +81,62 @@ export function HorasPorDia({ registros, mes, festivos, elegidos = [], alElegir 
         ))}
       </dl>
 
-      <div>
-        <div className="flex gap-2">
-          <div aria-hidden style={{ height: alto }}
-            className="flex w-9 shrink-0 flex-col justify-between text-right text-xs text-texto-suave">
-            {lineas.map((m) => <span key={m} className="-my-2 leading-4">{formatoHorasDecimal(m)}</span>)}
-          </div>
-          <div className="relative flex-1" style={{ height: alto }}>
-            <div aria-hidden className="absolute inset-0 flex flex-col justify-between">
-              {lineas.map((m) => <div key={m} className={`border-t ${m ? 'border-dashed' : ''} border-borde`} />)}
+      {/* En el celular los días no caben: la gráfica se desliza de lado. El pt deja sitio al detalle. */}
+      <div className="-mt-10 overflow-x-auto pt-10">
+        <div className="min-w-[40rem]">
+          <div className="flex gap-2">
+            <div aria-hidden style={{ height: alto }}
+              className="flex w-9 shrink-0 flex-col justify-between text-right text-xs text-texto-suave">
+              {lineas.map((m) => <span key={m} className="-my-2 leading-4">{formatoHorasDecimal(m)}</span>)}
             </div>
-            <div className="relative flex h-full items-end gap-0.5">
+            <div className="relative flex-1" style={{ height: alto }}>
+              <div aria-hidden className="absolute inset-0 flex flex-col justify-between">
+                {lineas.map((m) => <div key={m} className={`border-t ${m ? 'border-dashed' : ''} border-borde`} />)}
+              </div>
+              <div className="relative flex h-full items-end gap-0.5">
+                {dias.map((fecha) => {
+                  const total = porDia.get(fecha);
+                  const especial = diaDeSemana(fecha) % 6 === 0 || festivos.has(fecha);
+                  const elegido = elegidos.includes(fecha);
+                  const apagado = elegidos.length > 0 && !elegido;
+                  return (
+                    <button key={fecha} type="button" disabled={!total || !alElegir} aria-pressed={elegido}
+                      onClick={() => alElegir?.(fecha)}
+                      aria-label={total ? `${nombreCorto(fecha)}: ${formatoTotalHoras(total.minutos)}` : nombreCorto(fecha)}
+                      className={`group relative flex h-full flex-1 flex-col items-center justify-end rounded-t-sm
+                        enabled:cursor-pointer ${especial ? 'bg-seleccion' : ''}`}>
+                      {total && (
+                        <>
+                          <span className={`mb-1 text-[11px] font-semibold leading-none ${apagado ? 'text-texto-suave' : ''}`}>
+                            {formatoHorasDecimal(total.minutos)}
+                          </span>
+                          <div className={`w-full max-w-6 rounded-t transition-opacity group-hover:bg-secundario
+                            ${elegido ? 'bg-secundario' : 'bg-primario'} ${apagado ? 'opacity-30' : ''}`}
+                            style={{ height: `${(total.minutos / techo) * 100}%` }} />
+                          <Detalle>
+                            <strong>{nombreCorto(fecha)}</strong> · {formatoHorasDecimal(total.minutos)} h
+                            · {registrosTexto(total.registros)}
+                          </Detalle>
+                        </>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+          <div aria-hidden className="mt-1.5 flex gap-2">
+            <span className="w-9 shrink-0" />
+            <div className="flex flex-1 gap-0.5 text-center text-[11px] leading-tight text-texto-suave">
               {dias.map((fecha) => {
-                const total = porDia.get(fecha);
-                const especial = diaDeSemana(fecha) % 6 === 0 || festivos.has(fecha);
-                const elegido = elegidos.includes(fecha);
-                const apagado = elegidos.length > 0 && !elegido;
                 return (
-                  <button key={fecha} type="button" disabled={!total || !alElegir} aria-pressed={elegido}
-                    onClick={() => alElegir?.(fecha)}
-                    aria-label={total ? `${nombreCorto(fecha)}: ${formatoTotalHoras(total.minutos)}` : nombreCorto(fecha)}
-                    className={`group relative flex h-full flex-1 flex-col items-center justify-end rounded-t-sm
-                      enabled:cursor-pointer ${especial ? 'bg-seleccion' : ''}`}>
-                    {total && (
-                      <>
-                        <span className={`mb-1 text-[11px] font-semibold leading-none ${apagado ? 'text-texto-suave' : ''}`}>
-                          {formatoHorasDecimal(total.minutos)}
-                        </span>
-                        <div className={`w-full max-w-6 rounded-t transition-opacity group-hover:bg-secundario
-                          ${elegido ? 'bg-secundario' : 'bg-primario'} ${apagado ? 'opacity-30' : ''}`}
-                          style={{ height: `${(total.minutos / techo) * 100}%` }} />
-                        <Detalle>
-                          <strong>{nombreCorto(fecha)}</strong> · {formatoHorasDecimal(total.minutos)} h
-                          · {registrosTexto(total.registros)}
-                        </Detalle>
-                      </>
-                    )}
-                  </button>
+                  <span key={fecha} className="flex-1">
+                    <span className="block font-medium text-texto">{Number(fecha.slice(8))}</span>
+                    {DIAS[diaDeSemana(fecha)][0]}
+                  </span>
                 );
               })}
             </div>
-          </div>
-        </div>
-        <div aria-hidden className="mt-1.5 flex gap-2">
-          <span className="w-9 shrink-0" />
-          <div className="flex flex-1 gap-0.5 text-center text-[11px] leading-tight text-texto-suave">
-            {dias.map((fecha) => {
-              return (
-                <span key={fecha} className="flex-1">
-                  <span className="block font-medium text-texto">{Number(fecha.slice(8))}</span>
-                  {DIAS[diaDeSemana(fecha)][0]}
-                </span>
-              );
-            })}
           </div>
         </div>
       </div>
