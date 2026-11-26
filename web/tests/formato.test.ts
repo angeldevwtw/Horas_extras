@@ -22,7 +22,7 @@ const registro: Registro = {
 };
 
 it('arma el formato con el encabezado combinado, los formatos y el pie', async () => {
-  const libro = await construirLibro([registro], () => 'FF521380');
+  const libro = await construirLibro([registro], () => 'FF1A71EF');
   // Ida y vuelta por el archivo para revisar lo que realmente queda en el .xlsx.
   const leido = new ExcelJS.Workbook();
   await leido.xlsx.load(await libro.xlsx.writeBuffer());

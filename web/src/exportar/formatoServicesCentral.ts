@@ -38,7 +38,7 @@ const FIRMAS = [
 const DELGADO = { style: 'thin' as const };
 const BORDES: Partial<Borders> = { top: DELGADO, left: DELGADO, bottom: DELGADO, right: DELGADO };
 
-/** Devuelve un color del tema en formato ARGB de Excel (ej. "FF521380"). */
+/** Devuelve un color del tema en formato ARGB de Excel (ej. "FF1A71EF"). */
 export type ColorDelTema = (nombre: string) => string;
 
 // Los colores salen del tema (tema.css), que es la única fuente de la paleta.

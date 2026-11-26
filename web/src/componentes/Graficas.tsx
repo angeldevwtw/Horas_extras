@@ -165,7 +165,7 @@ const SinDatos = () => (
 
 const porcentaje = (parte: number, total: number) => (total ? Math.round((parte / total) * 100) : 0);
 
-/** Frase destacada sobre la gráfica, con la cifra en morado. */
+/** Frase destacada sobre la gráfica, con la cifra en azul. */
 function Titular({ children }: { children: ReactNode }) {
   return <p className="rounded-lg bg-fondo px-4 py-3 text-sm">{children}</p>;
 }

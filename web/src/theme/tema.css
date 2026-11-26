@@ -4,15 +4,16 @@
    así ningún componente puede usar un color fuera de la paleta de marca.
    Contraste verificado (WCAG AA, 4.5:1), en claro y en oscuro: sobre-color sobre primario,
    primario-hover, secundario, error, estado-registrada y estado-anulada; tinta sobre alerta;
-   texto, texto-suave y primario sobre fondo, superficie, suave y seleccion. */
+   texto y texto-suave sobre fondo, superficie, suave y seleccion. El primario #1a71ef llega a
+   4.5:1 sobre superficie; sobre fondo, suave y seleccion queda en 4.0 a 4.2:1. */
 @theme static {
   --color-*: initial;
 
-  --color-primario: #521380;
-  --color-primario-hover: #41056d;
-  --color-secundario: #7f35b2;
-  --color-suave: #f6f0fa;      /* A56BCD al 10 % sobre blanco */
-  --color-seleccion: #f3ebf9;  /* B07BD6 al 15 % sobre blanco */
+  --color-primario: #1a71ef;
+  --color-primario-hover: #135ac6;
+  --color-secundario: #0e4fae;
+  --color-suave: #f3f8fe;
+  --color-seleccion: #e9f2fe;
 
   --color-error: #ca2254;
   --color-error-suave: #fbedf1;
@@ -22,13 +23,13 @@
   --color-estado-anulada: #5f6368;
 
   --color-blanco: #ffffff;     /* siempre blanco: anillos y el encabezado del Excel */
-  --color-tinta: #1c1c21;      /* siempre oscuro: texto sobre alerta y velo de la guía */
+  --color-tinta: #1b1d22;      /* siempre oscuro: texto sobre alerta y velo de la guía */
   --color-sobre-color: #ffffff; /* texto sobre rellenos de color (botones, insignias) */
   --color-superficie: #ffffff; /* tarjetas, encabezado y campos */
-  --color-fondo: #f7f7f8;
-  --color-borde: #d9d9de;
-  --color-texto: #1c1c21;
-  --color-texto-suave: #5c5c66;
+  --color-fondo: #f6f7f9;
+  --color-borde: #d8dbe0;
+  --color-texto: #1b1d22;
+  --color-texto-suave: #5a5f69;
 
   --font-sans: "Figtree Variable", "Segoe UI", system-ui, sans-serif;
 }
@@ -39,11 +40,11 @@
   color-scheme: dark;
 }
 :root[data-tema="oscuro"] body {
-  --color-primario: #c39be6;
-  --color-primario-hover: #d4b6ef;
-  --color-secundario: #ad7bd8;
-  --color-suave: #2a2234;
-  --color-seleccion: #33283f;
+  --color-primario: #7fb0ff;
+  --color-primario-hover: #a6c8ff;
+  --color-secundario: #5c9aff;
+  --color-suave: #1a2232;
+  --color-seleccion: #212c42;
 
   --color-error: #ff7d9e;
   --color-error-suave: #3b1d28;
@@ -51,12 +52,12 @@
   --color-estado-registrada: #4cbcbc;
   --color-estado-anulada: #a2a6ad;
 
-  --color-sobre-color: #18151d;
-  --color-superficie: #1c1b22;
-  --color-fondo: #121116;
-  --color-borde: #3a3842;
-  --color-texto: #ececf1;
-  --color-texto-suave: #a9a7b2;
+  --color-sobre-color: #0f1520;
+  --color-superficie: #1a1c22;
+  --color-fondo: #111317;
+  --color-borde: #383c45;
+  --color-texto: #eceef2;
+  --color-texto-suave: #a7abb4;
 }
 
 @layer base {
@@ -114,7 +115,7 @@ select:disabled {
     border: 1px solid var(--color-borde);
     border-radius: 0.5rem;
     background: var(--color-superficie);
-    box-shadow: 0 8px 24px rgb(28 28 33 / 0.12);
+    box-shadow: 0 8px 24px rgb(27 29 34 / 0.12);
     overflow-y: auto;
   }
   option {
