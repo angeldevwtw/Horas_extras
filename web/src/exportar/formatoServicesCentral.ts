@@ -4,7 +4,7 @@ import { minutosDelDia } from '../lib/horas';
 import type { FilaFormato } from '../lib/tipos';
 
 const POLITICA = [
-  'WTW reconocerá trabajo de horas extras a sus Colegas únicamente cuando previa y expresamente '
+  'La compañía reconocerá trabajo de horas extras a sus Colegas únicamente cuando previa y expresamente '
   + 'lo autorice la Vicepresidencia del área, Recursos Humanos y el Jefe inmediato.',
   'Aplicable para niveles 68: Analista - Ejecutivo, 73: Asistentes y 78 Conductor registrados en '
   + 'HR Cloud autorizados para realizar trabajo suplementario, dominical o festivo, previa '
